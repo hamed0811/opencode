@@ -15,6 +15,36 @@
     "structuredOutputs": true,
     "maxOutputTokens": 5000
   },
+  "apiGateways": {
+    "default": "openrouter",
+    "profiles": [
+      {
+        "id": "openrouter",
+        "name": "OpenRouter",
+        "type": "openai-compatible",
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "model": "openai/gpt-4o-mini",
+        "apiKeyEnv": "OPENROUTER_API_KEY",
+        "enabled": true,
+        "headers": {
+          "HTTP-Referer": "${COUNCIL_APP_URL}",
+          "X-OpenRouter-Title": "Council Room"
+        },
+        "notes": "روتر ابری با انتخاب مدل و fallback بین providerها"
+      },
+      {
+        "id": "omniroute",
+        "name": "OmniRoute",
+        "type": "openai-compatible",
+        "baseUrl": "http://localhost:20128/v1",
+        "model": "auto",
+        "apiKeyEnv": "OMNIROUTE_API_KEY",
+        "enabled": true,
+        "headers": {},
+        "notes": "روتر محلی با endpoint سازگار با OpenAI و مدل auto"
+      }
+    ]
+  },
   "orchestrator": {
     "id": "chief-engineer",
     "role": "مدیر ارشد و مغز متفکر سیستم",
