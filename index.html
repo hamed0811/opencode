@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1220" />
+    <meta name="description" content="داشبورد مشاهده و مدیریت اتاق مشورت چندایجنتی برنامه‌نویسی" />
+    <title>Council Room — اتاق مشورت ایجنت‌ها</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script defer src="/app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div>
+            <div class="brand-name">COUNCIL<span>ROOM</span></div>
+            <div class="brand-caption">شورای توسعه نرم‌افزار</div>
+          </div>
+        </div>
+        <div class="topbar-center">
+          <div class="live-indicator"><i></i> جلسه زنده</div>
+          <div class="session-id">جلسه <strong>ADR-024</strong> <span>•</span> انتخاب معماری پرداخت</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-button" id="pauseBtn" aria-label="توقف جلسه" title="توقف جلسه"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+          <button class="icon-button" aria-label="اعلان‌ها" title="اعلان‌ها"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><b class="notification-dot"></b></button>
+          <div class="owner-chip"><span class="avatar owner-avatar">ح</span><span>حامد</span><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></div>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="sidebar panel">
+          <div class="sidebar-heading">
+            <div>
+              <div class="eyebrow">اتاق فرمان <span class="muted-slash">/</span> تیم ایجنت‌ها</div>
+              <h1>اعضای جلسه <span class="count-badge">۹</span></h1>
+            </div>
+            <button class="small-icon" aria-label="افزودن ایجنت" title="افزودن ایجنت"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+          <div class="agent-list" id="agentList"></div>
+          <div class="sidebar-footer">
+            <div class="health-label"><span><i class="health-dot"></i> سلامت سیستم</span><strong>۹۸٪</strong></div>
+            <div class="health-bar"><span></span></div>
+            <div class="sidebar-footnote"><span class="pulse-ring"></span> همه سرویس‌ها عملیاتی هستند</div>
+          </div>
+        </aside>
+
+        <section class="main-column">
+          <section class="project-header panel">
+            <div class="project-title-block">
+              <div class="project-kicker"><span class="project-icon">⌘</span> پروژه: فروشگاه آنلاین نُوا <span class="separator">/</span> فاز معماری</div>
+              <h2>آیا پرداخت آنلاین را به‌صورت سرویس جدا پیاده‌سازی کنیم؟</h2>
+              <p>تصمیم درباره ساختار پرداخت، وب‌هوک‌ها و مسئولیت‌های سرویس برای نسخه‌ی اول محصول.</p>
+            </div>
+            <div class="project-meta">
+              <div class="meta-item"><span>زمان سپری‌شده</span><strong id="elapsed">۰۰:۱۸:۴۲</strong></div>
+              <div class="meta-divider"></div>
+              <div class="meta-item"><span>پیام‌ها</span><strong id="messageCount">۲۴</strong></div>
+              <div class="meta-divider"></div>
+              <div class="meta-item"><span>مرحله</span><strong class="teal-text">مشورت</strong></div>
+            </div>
+          </section>
+
+          <div class="progress-strip panel">
+            <div class="progress-label"><span>پیشرفت جلسه</span><strong>۶۸٪</strong></div>
+            <div class="progress-track"><span></span></div>
+            <div class="stage-steps"><span class="done"><i>✓</i> نیازمندی</span><span class="done"><i>✓</i> گزینه‌ها</span><span class="active"><i></i> مشورت</span><span><i></i> حکم نهایی</span><span><i></i> اجرا</span></div>
+          </div>
+
+          <section class="discussion panel">
+            <div class="section-header">
+              <div>
+                <div class="section-title-line"><h3>جریان گفت‌وگو</h3><span class="unread-pill"><i></i> ۳ پیام جدید</span></div>
+                <p>نظرها، نقدها و پاسخ‌های متقابل اتاق در یک نگاه</p>
+              </div>
+              <div class="discussion-tools">
+                <div class="filter-select"><select id="agentFilter" aria-label="فیلتر بر اساس ایجنت"><option value="all">همه ایجنت‌ها</option><option value="architect">معمار</option><option value="security">امنیت</option><option value="backend">بک‌اند</option><option value="qa">تست</option><option value="critic">منتقد مخالف</option></select><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></div>
+                <button class="view-toggle active" data-view="all">همه</button>
+                <button class="view-toggle" data-view="critical">مهم</button>
+              </div>
+            </div>
+            <div class="timeline" id="timeline"></div>
+            <div class="typing-row" id="typingRow"><span class="typing-avatar avatar judge-avatar">ق</span><span><strong>قاضی نهایی</strong> در حال جمع‌بندی نظرهاست</span><span class="typing-dots"><i></i><i></i><i></i></span></div>
+            <div class="composer">
+              <div class="composer-avatar avatar owner-avatar">ح</div>
+              <div class="composer-input-wrap"><textarea id="messageInput" rows="1" placeholder="دستور یا سؤال جدیدی برای اتاق بنویسید…"></textarea><div class="composer-bottom"><span class="composer-hint"><kbd>@</kbd> برای خطاب به یک ایجنت &nbsp; <kbd>⌘</kbd><kbd>↵</kbd> ارسال</span><button class="send-button" id="sendBtn">ارسال به اتاق <svg viewBox="0 0 24 24"><path d="m5 12 14-7-3 14-4-5-7-2Zm7 2 3 2"/></svg></button></div></div>
+            </div>
+          </section>
+        </section>
+
+        <aside class="right-rail">
+          <section class="verdict-card panel">
+            <div class="verdict-head"><div><div class="eyebrow">تصمیم نهایی <span class="live-line"></span></div><h3>حکم قاضی</h3></div><span class="verdict-status">مشروطاً تأیید شد</span></div>
+            <div class="decision-box"><div class="decision-label">پیشنهاد انتخاب‌شده</div><div class="decision-name">Modular Monolith <span>+</span> Payment Module</div><div class="confidence"><div><span>اطمینان تصمیم</span><strong>۹۱٪</strong></div><div class="confidence-track"><span></span></div></div></div>
+            <div class="verdict-section"><div class="mini-heading"><span class="mini-icon good">✓</span><strong>چرا این گزینه؟</strong></div><ul><li>سرعت تحویل بالاتر برای تیم فعلی</li><li>مرز ماژولار روشن برای جدا شدن در آینده</li><li>تراکنش و دیباگ ساده‌تر در نسخه اول</li></ul></div>
+            <div class="verdict-section risk-section"><div class="mini-heading"><span class="mini-icon warn">!</span><strong>شرایط و ریسک‌ها</strong></div><ul><li>وب‌هوک باید idempotent باشد</li><li>کلیدهای درگاه فقط در Secret Manager</li></ul></div>
+            <div class="next-action"><span class="next-icon">→</span><div><small>گام بعدی</small><strong>ایجاد ADR و اسکلت ماژول پرداخت</strong></div></div>
+            <button class="primary-action" id="approveBtn">تأیید حکم و شروع اجرا <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></button>
+            <button class="text-action" id="detailsBtn">مشاهده متن کامل حکم <span>←</span></button>
+          </section>
+
+          <section class="disputes-card panel">
+            <div class="rail-title"><div><div class="eyebrow">گفت‌وگوی چالشی</div><h3>اختلاف‌نظرها <span class="count-badge orange">۲</span></h3></div><button class="small-icon" aria-label="بیشتر"><svg viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg></button></div>
+            <div class="dispute-item"><div class="dispute-top"><span class="dispute-tag orange-tag">باز</span><span class="dispute-time">۲ دقیقه پیش</span></div><strong>مرز سرویس پرداخت</strong><p>آیا در نسخه اول واقعاً به سرویس جدا نیاز داریم؟</p><div class="dispute-voices"><span class="mini-avatar architect-avatar">م</span><span class="mini-avatar security-avatar">ا</span><span class="voice-count">+۲ نظر</span></div></div>
+            <div class="dispute-item"><div class="dispute-top"><span class="dispute-tag purple-tag">حل‌شده</span><span class="dispute-time">۵ دقیقه پیش</span></div><strong>استفاده از صف برای وب‌هوک</strong><p>برای Retry از Queue استفاده شود یا نه؟</p><div class="dispute-voices"><span class="mini-avatar backend-avatar">ب</span><span class="mini-avatar qa-avatar">ت</span><span class="voice-count">+۳ نظر</span></div></div>
+            <button class="full-width-action">مشاهده همه اختلاف‌نظرها <span>←</span></button>
+          </section>
+
+          <section class="approval-card panel"><div class="approval-icon">!</div><div><div class="eyebrow">نیازمند اقدام شما</div><strong>اجرای Migration در Staging</strong><p>قاضی برای ادامه کار منتظر تأیید مدیر پروژه است.</p><div class="approval-actions"><button id="approvalBtn" class="approve-small">تأیید</button><button class="decline-small">بررسی بعدی</button></div></div></section>
+        </aside>
+      </main>
+      <div class="toast" id="toast" role="status"></div>
+    </div>
+  </body>
+</html>
