@@ -1,21 +1,39 @@
-# API gateway profiles
+# API gateway catalog
 
-فایل `config/council.config.json` دو profile آماده برای endpointهای سازگار با OpenAI دارد:
+فایل `config/council.config.json` اکنون یک catalog از ۱۸ profile آماده دارد. دو profile اول برای routerها هستند و بقیه providerهای مستقیم یا inference platformهای معروف‌اند.
 
-- **OpenRouter** با `https://openrouter.ai/api/v1` و مدل نمونه `openai/gpt-4o-mini`.
-- **OmniRoute** با `http://localhost:20128/v1` و مدل `auto` برای route و fallback محلی.
+## Routerها
 
-هیچ مقدار API key داخل repository ذخیره نمی‌شود. مقدار واقعی را در محیط اجرای سرویس با نام متغیر ثبت‌شده در `apiKeyEnv` قرار دهید؛ برای profileهای پیش‌فرض این نام‌ها `OPENROUTER_API_KEY` و `OMNIROUTE_API_KEY` هستند. مقدار `${COUNCIL_APP_URL}` نیز فقط برای header شناسایی برنامه در OpenRouter است و باید با origin واقعی اجرا جایگزین شود.
+- **OpenRouter** — `https://openrouter.ai/api/v1` — `OPENROUTER_API_KEY`
+- **OmniRoute** — `http://localhost:20128/v1` — `OMNIROUTE_API_KEY`
 
-رابط Council Room در کارت «درگاه‌های API» اجازه می‌دهد profileهای بیشتری با هر endpoint سازگار با OpenAI اضافه کنید. این رابط فقط metadata و reference کلید را در `localStorage` نگه می‌دارد و مقدار secret را ذخیره یا نمایش نمی‌دهد. دکمه «بررسی تنظیمات» اعتبار URL، مدل و نام متغیر را بررسی می‌کند؛ بررسی واقعی provider باید در runtime امن انجام شود.
+## Model providerها
 
-نمونه‌ی مصرف در کلاینت OpenAI-compatible:
+- **OpenAI** — `https://api.openai.com/v1` — `OPENAI_API_KEY`
+- **Anthropic** — `https://api.anthropic.com/v1/` — `ANTHROPIC_API_KEY`
+- **Google Gemini** — `https://generativelanguage.googleapis.com/v1beta/openai/` — `GEMINI_API_KEY`
+- **Mistral AI** — `https://api.mistral.ai/openai/v1` — `MISTRAL_API_KEY`
+- **DeepSeek** — `https://api.deepseek.com` — `DEEPSEEK_API_KEY`
+- **xAI / Grok** — `https://api.x.ai/v1` — `XAI_API_KEY`
+- **Cohere** — `https://api.cohere.com/compatibility` — `COHERE_API_KEY`
 
-```js
-const client = new OpenAI({
-  baseURL: process.env.OPENROUTER_BASE_URL ?? 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
-```
+## Inference platformها
 
-منابع رسمی برای endpointها: [OpenRouter API overview](https://openrouter.ai/docs/api-reference/overview)، [OmniRoute API](https://omniroute.online/api/)، و [OmniRoute repository](https://github.com/cheaper-inference/OmniRoute).
+- **Groq** — `https://api.groq.com/openai/v1` — `GROQ_API_KEY`
+- **Together AI** — `https://api.together.ai/v1` — `TOGETHER_API_KEY`
+- **Fireworks AI** — `https://api.fireworks.ai/inference/v1` — `FIREWORKS_API_KEY`
+- **Cerebras** — `https://api.cerebras.ai/v1` — `CEREBRAS_API_KEY`
+- **SambaNova** — `https://api.sambanova.ai/v1` — `SAMBANOVA_API_KEY`
+- **NVIDIA NIM** — `https://integrate.api.nvidia.com/v1` — `NVIDIA_API_KEY`
+- **Hugging Face Inference** — `https://router.huggingface.co/v1` — `HF_TOKEN`
+
+## Providerهای native REST
+
+- **Perplexity Agent API** — `https://api.perplexity.ai/v1` — `PERPLEXITY_API_KEY`
+- **Replicate** — `https://api.replicate.com/v1` — `REPLICATE_API_TOKEN`
+
+بیشتر این profileها OpenAI-compatible هستند و می‌توانند با یک client مشترک استفاده شوند. Replicate native REST است و برای آن باید adapter جداگانه‌ی درخواست‌های مدل استفاده شود. Anthropic نیز برای قابلیت‌های کامل Claude بهتر است از Messages API native استفاده کند؛ profile موجود برای compatibility و شروع سریع است.
+
+هیچ مقدار secret در فایل، localStorage یا خروجی JSON ذخیره نمی‌شود. فقط نام env در `apiKeyEnv` ثبت شده است. مقدار واقعی را در runtime امن پروژه تنظیم کنید. مدل‌های providerها تغییر می‌کنند؛ قبل از استفاده در production، مدل را از catalog رسمی همان provider بررسی یا با مقدار profile جایگزین کنید.
+
+منابع رسمی در فیلد `officialSource` هر profile نیز ثبت شده‌اند. چند مرجع اصلی: [OpenRouter API](https://openrouter.ai/docs/api-reference/overview)، [OpenAI API](https://platform.openai.com/docs/api-reference/introduction)، [Google Gemini OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai)، [Groq OpenAI compatibility](https://console.groq.com/docs/openai)، [Replicate HTTP API](https://replicate.com/docs/reference/http)، و [NVIDIA NIM API reference](https://docs.nvidia.com/nim/large-language-models/reference/api-reference).

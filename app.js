@@ -79,8 +79,16 @@ function gatewayStatus(profile) {
   if (!profile.keyConfigured) return { label: 'منتظر secret', cls: 'gateway-neutral' };
   return { label: 'آماده', cls: 'gateway-ready' };
 }
+function renderGatewayPresetOptions() {
+  const select = document.getElementById('gatewayPreset');
+  if (!select) return;
+  const current = select.value;
+  select.innerHTML = gatewayProfiles.map(profile => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.name)}</option>`).join('') + '<option value="custom">OpenAI-compatible سفارشی</option>';
+  select.value = gatewayProfiles.some(profile => profile.id === current) || current === 'custom' ? current : 'custom';
+}
 function renderGateways() {
   gatewayCount.textContent = toPersianDigits(gatewayProfiles.length);
+  renderGatewayPresetOptions();
   gatewayList.innerHTML = gatewayProfiles.map(profile => {
     const status = gatewayStatus(profile);
     return `<article class="gateway-item ${profile.enabled ? '' : 'is-disabled'}" data-gateway-id="${escapeHtml(profile.id)}"><div class="gateway-item-head"><div class="gateway-logo ${profile.id === 'openrouter' ? 'openrouter-logo' : profile.id === 'omniroute' ? 'omniroute-logo' : 'custom-logo'}">${profile.id === 'openrouter' ? 'O' : profile.id === 'omniroute' ? 'Ω' : '↗'}</div><div class="gateway-title"><strong>${escapeHtml(profile.name)}</strong><span>${escapeHtml(profile.badge || 'OpenAI-compatible')}</span></div><span class="gateway-status ${status.cls}"><i></i>${status.label}</span></div><div class="gateway-details"><code>${escapeHtml(profile.baseUrl || 'Base URL وارد نشده')}</code><span class="gateway-model">model: ${escapeHtml(profile.model || '—')}</span></div><div class="gateway-item-footer"><span class="gateway-secret"><i></i>${escapeHtml(profile.apiKeyEnv || 'SECRET_ENV تنظیم نشده')}</span><button class="gateway-edit" data-edit-gateway="${escapeHtml(profile.id)}">ویرایش</button></div></article>`;
@@ -88,7 +96,7 @@ function renderGateways() {
   gatewayList.querySelectorAll('[data-edit-gateway]').forEach(button => button.addEventListener('click', () => openGatewayForm(button.dataset.editGateway)));
 }
 function applyPreset(presetId) {
-  const preset = gatewayPresets[presetId] || gatewayPresets.custom;
+  const preset = gatewayProfiles.find(profile => profile.id === presetId) || gatewayPresets[presetId] || gatewayPresets.custom;
   document.getElementById('gatewayName').value = preset.name;
   document.getElementById('gatewayBaseUrl').value = preset.baseUrl;
   document.getElementById('gatewayModel').value = preset.model;
@@ -99,7 +107,7 @@ function openGatewayForm(id = null) {
   const profile = id ? gatewayProfiles.find(item => item.id === id) : gatewayPresets.custom;
   if (!profile) return;
   document.getElementById('gatewayFormTitle').textContent = id ? `ویرایش ${profile.name}` : 'افزودن درگاه';
-  document.getElementById('gatewayPreset').value = id === 'openrouter' || id === 'omniroute' ? id : 'custom';
+  document.getElementById('gatewayPreset').value = id && gatewayProfiles.some(profile => profile.id === id) ? id : 'custom';
   document.getElementById('gatewayName').value = profile.name;
   document.getElementById('gatewayBaseUrl').value = profile.baseUrl;
   document.getElementById('gatewayModel').value = profile.model;
@@ -138,13 +146,15 @@ function exportGateways() {
   const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'council-api-gateways.json'; link.click(); URL.revokeObjectURL(url); showToast('JSON امن دانلود شد؛ مقدار کلید داخل فایل نیست.');
 }
 async function loadProjectGateways() {
-  if (localStorage.getItem('council-api-gateways')) return;
   try {
     const response = await fetch('/config/council.config.json', { cache: 'no-store' });
     if (!response.ok) return;
     const config = await response.json();
     if (Array.isArray(config.apiGateways?.profiles) && config.apiGateways.profiles.length) {
-      gatewayProfiles = config.apiGateways.profiles.map(profile => ({ ...profile, keyConfigured: false, badge: profile.id === 'openrouter' ? 'Cloud Router' : profile.id === 'omniroute' ? 'Local Router' : 'Custom' }));
+      const stored = JSON.parse(localStorage.getItem('council-api-gateways') || '[]');
+      const storedById = new Map(stored.map(profile => [profile.id, profile]));
+      const configuredIds = new Set(config.apiGateways.profiles.map(profile => profile.id));
+      gatewayProfiles = config.apiGateways.profiles.map(profile => ({ ...profile, ...(storedById.get(profile.id) || {}), keyConfigured: Boolean(storedById.get(profile.id)?.keyConfigured), badge: profile.badge || (profile.id === 'openrouter' ? 'Cloud Router' : profile.id === 'omniroute' ? 'Local Router' : profile.type === 'native-rest' ? 'Native REST' : 'OpenAI-compatible') })).concat(stored.filter(profile => !configuredIds.has(profile.id)));
       renderGateways();
     }
   } catch (error) { console.warn('Project gateway config could not be loaded.', error); }
