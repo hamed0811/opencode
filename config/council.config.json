@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "project": {
+    "name": "opencode",
+    "owner": "hamed0811",
+    "defaultBranch": "main",
+    "workspace": "./workspace"
+  },
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4.1-mini",
+    "baseUrl": "${OPENAI_API_BASE}",
+    "apiKey": "${OPENAI_API_KEY}",
+    "temperature": 0.2,
+    "structuredOutputs": true,
+    "maxOutputTokens": 5000
+  },
+  "orchestrator": {
+    "id": "chief-engineer",
+    "role": "مدیر ارشد و مغز متفکر سیستم",
+    "maxTurnsPerMeeting": 12,
+    "parallelConsultations": true,
+    "requireEvidenceForClaims": true,
+    "alwaysInviteDissent": true,
+    "humanApprovalFor": [
+      "production_deploy",
+      "merge_pull_request",
+      "database_destructive_migration",
+      "secret_or_permission_change"
+    ]
+  },
+  "council": {
+    "moderator": "orchestrator",
+    "judge": "final-judge",
+    "dissentAgent": "critic",
+    "agents": [
+      "requirements",
+      "architect",
+      "backend",
+      "frontend",
+      "database",
+      "security",
+      "qa",
+      "devops",
+      "critic"
+    ],
+    "decisionWeights": {
+      "technicalCorrectness": 0.25,
+      "security": 0.25,
+      "maintainability": 0.15,
+      "testability": 0.15,
+      "deliverySpeed": 0.1,
+      "cost": 0.1
+    },
+    "vetoRules": [
+      "critical_security_risk",
+      "missing_rollback_for_irreversible_change",
+      "unbounded_tool_execution"
+    ]
+  },
+  "github": {
+    "repository": "hamed0811/opencode",
+    "defaultBranch": "main",
+    "pullRequests": {
+      "enabled": true,
+      "draftByDefault": true,
+      "branchPrefix": "agent/",
+      "requireGreenChecks": true,
+      "requireHumanApprovalToMerge": true,
+      "neverPushDirectlyTo": ["main"]
+    },
+    "allowedOperations": ["read", "branch", "commit", "push_feature_branch", "create_pull_request"]
+  },
+  "execution": {
+    "sandbox": {
+      "enabled": true,
+      "network": "deny_by_default",
+      "timeoutSeconds": 900,
+      "maxFilesChangedPerRun": 80
+    },
+    "allowedTools": ["read_file", "write_file", "edit_file", "run_tests", "git_diff", "git_commit", "git_push_feature_branch", "github_create_pull_request"],
+    "blockedTools": ["delete_repository", "force_push", "merge_pull_request", "read_secrets", "production_deploy"]
+  },
+  "observability": {
+    "eventStore": "./runtime/events.jsonl",
+    "persistFullTranscript": true,
+    "redactSecrets": true,
+    "dashboard": {
+      "showAgentThinking": false,
+      "showMessages": true,
+      "showToolCalls": true,
+      "showDiffs": true,
+      "showApprovals": true
+    }
+  }
+}

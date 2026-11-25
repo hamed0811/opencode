@@ -8,4 +8,8 @@
 - [x] Add human approval request block for sensitive actions.
 - [x] Add project-owner composer to send a new instruction into the room.
 - [x] Add responsive desktop/mobile layouts and accessible focus states.
-- [ ] Connect the UI to real LLM agents, durable sessions, and Git events.
+- [x] Add sample opencode consultation session from intake to Draft Pull Request.
+- [x] Add OpenAI-oriented Orchestrator configuration and system/role prompts.
+- [ ] Connect the server runtime to OpenAI using a protected secret.
+- [ ] Connect GitHub repository hamed0811/opencode after owner confirmation.
+- [ ] Create real branch, run tests, and open a Draft Pull Request from the server.
