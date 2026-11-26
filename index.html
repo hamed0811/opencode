@@ -53,18 +53,30 @@
             <button class="primary-action" id="connectConcatBtn" type="button">اتصال به Concat</button>
           </div>
           <div class="motion-studio-workspace" id="motionStudioWorkspace" hidden>
-            <label for="motionToolSelect">ابزار Concat</label>
-            <select id="motionToolSelect"><option value="">ابزار را انتخاب کنید</option></select>
-            <div class="motion-tool-description" id="motionToolDescription"></div>
-            <details class="motion-schema"><summary>مشاهده ورودی موردنیاز</summary><pre id="motionToolSchema"></pre></details>
-            <label for="motionToolArgs">ورودی JSON</label>
-            <textarea id="motionToolArgs" rows="6" spellcheck="false">{}</textarea>
-            <div class="motion-actions">
-              <button id="runMotionToolBtn" type="button" disabled>اجرای ابزار</button>
-              <button id="disconnectConcatBtn" type="button">قطع اتصال</button>
+            <div class="motion-agent-chat">
+              <label for="motionAgentPrompt">درخواست خود را برای دستیار Motion Studio بنویسید</label>
+              <textarea id="motionAgentPrompt" rows="3" placeholder="مثلاً یک پروژه بساز، ویدئوها را وارد کن و یک برش اولیه ایجاد کن."></textarea>
+              <div class="motion-actions">
+                <button id="runMotionAgentBtn" type="button">اجرای درخواست با هوش مصنوعی</button>
+                <button id="disconnectConcatBtn" type="button">قطع اتصال</button>
+              </div>
+              <label for="motionAgentResult">گزارش دستیار و نتیجه ابزارها</label>
+              <pre id="motionAgentResult" class="motion-tool-result" aria-live="polite">در انتظار درخواست شما…</pre>
             </div>
-            <label for="motionToolResult">نتیجه</label>
-            <pre id="motionToolResult" class="motion-tool-result" aria-live="polite">هنوز دستوری اجرا نشده است.</pre>
+            <details class="motion-manual-tools">
+              <summary>ابزارهای دستی MCP</summary>
+              <label for="motionToolSelect">ابزار Concat</label>
+              <select id="motionToolSelect"><option value="">ابزار را انتخاب کنید</option></select>
+              <div class="motion-tool-description" id="motionToolDescription"></div>
+              <details class="motion-schema"><summary>مشاهده ورودی موردنیاز</summary><pre id="motionToolSchema"></pre></details>
+              <label for="motionToolArgs">ورودی JSON</label>
+              <textarea id="motionToolArgs" rows="6" spellcheck="false">{}</textarea>
+              <div class="motion-actions">
+                <button id="runMotionToolBtn" type="button" disabled>اجرای ابزار</button>
+              </div>
+              <label for="motionToolResult">نتیجه ابزار دستی</label>
+              <pre id="motionToolResult" class="motion-tool-result" aria-live="polite">هنوز دستوری اجرا نشده است.</pre>
+            </details>
           </div>
         </div>
       </section>
