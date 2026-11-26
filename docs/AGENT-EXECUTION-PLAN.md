@@ -138,7 +138,7 @@ Concat's current MCP documentation states that window mode routes through the op
 
 The Motion Studio assistant uses the installed OpenCode 1.x CLI as a text planner only.
 
-- It runs with a private app-data working directory, not the user's source workspace.
+- It uses OpenCode's default in-process run server with a private app-data working directory, not the user's source workspace.
 - It uses a custom primary agent with all OpenCode tools denied.
 - It sets `OPENCODE_DISABLE_PROJECT_CONFIG=1` and supplies a restricted inline config.
 - The model returns a JSON plan. It cannot call Concat or run shell commands directly.
