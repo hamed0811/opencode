@@ -57,7 +57,8 @@ async function runConcatToolWithApproval(name, args = {}) {
     });
     if (choice.response !== 1) return { ok: false, cancelled: true };
   }
-  return { ok: true, result: await concatClient.callTool(name, args) };
+  const result = await concatClient.callTool(name, args);
+  return { ok: result?.isError !== true, result };
 }
 
 function runCommand(command, args, timeout = 2500) {
