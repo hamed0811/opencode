@@ -123,9 +123,9 @@ Concat's current MCP documentation states that window mode routes through the op
 ## Current blockers
 
 - The target Windows device is offline in Desktop Commander. Real-device checks cannot run yet.
-- The Concat 0.2.12 installation is confirmed by the user, but Council Room has not yet completed an MCP handshake with it.
+- The Concat 0.2.12 installation is confirmed by the user. An initial supervised MCP transport and UI panel are on the feature branch, but the real MCP handshake and end-to-end tests have not run.
 - No Windows isolation backend has been selected or verified.
-- GitHub Copilot review has been requested in PR #1. No Copilot review response has been observed yet.
+- GitHub Copilot review has been requested in PR #1. The issue comment did not trigger a review; the supported reviewer request still needs to be sent from the PR Reviewers control or API.
 - The project license remains `UNLICENSED`.
 
 ## Release decision
