@@ -41,7 +41,7 @@ const gatewayForm = document.getElementById('gatewayForm');
 const gatewayCount = document.getElementById('gatewayCount');
 let currentView = 'all';
 let isPaused = false;
-let messageTotal = 31;
+let messageTotal = messages.length;
 let editingGatewayId = null;
 let gatewayProfiles = loadStoredGateways();
 
@@ -171,7 +171,9 @@ function exportGateways() {
 }
 async function loadProjectGateways() {
   try {
-    const response = await fetch('/config/council.config.json', { cache: 'no-store' });
+    const response = window.councilCompanion?.loadProjectConfig
+      ? { ok: true, json: () => window.councilCompanion.loadProjectConfig() }
+      : await fetch('./config/council.config.json', { cache: 'no-store' });
     if (!response.ok) return;
     const config = await response.json();
     if (Array.isArray(config.apiGateways?.profiles) && config.apiGateways.profiles.length) {
@@ -190,9 +192,9 @@ document.getElementById('sendBtn').addEventListener('click', addMessage);
 messageInput.addEventListener('keydown', event => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); addMessage(); } });
 messageInput.addEventListener('input', () => { messageInput.style.height = 'auto'; messageInput.style.height = `${Math.min(messageInput.scrollHeight, 100)}px`; });
 document.getElementById('pauseBtn').addEventListener('click', event => { isPaused = !isPaused; event.currentTarget.innerHTML = isPaused ? '<svg viewBox="0 0 24 24"><path d="m6 12 4 4L18 8"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>'; showToast(isPaused ? 'فقط شمارنده زمان متوقف شد؛ اجرای OpenCode لغو نمی‌شود.' : 'شمارنده زمان ادامه یافت.'); });
-document.getElementById('approveBtn').addEventListener('click', () => { showToast('تأیید واقعی و ساخت Branch یا Pull Request هنوز پیاده‌سازی نشده است.'); });
-document.getElementById('approvalBtn').addEventListener('click', () => { showToast('این دکمه هنوز به گردش‌کار تأیید واقعی متصل نیست. هیچ تغییری ثبت نشد.'); });
-document.querySelector('.decline-small').addEventListener('click', () => showToast('رد درخواست هنوز به گردش‌کار واقعی متصل نیست. هیچ تغییری ثبت نشد.'));
+document.getElementById('approveBtn').addEventListener('click', () => { showToast('این حکم نمونه است. هیچ Branch یا Pull Request ساخته نشد.'); });
+document.getElementById('approvalBtn').addEventListener('click', () => { showToast('این کارت نمونه است. هیچ تأییدی ثبت نشد.'); });
+document.querySelector('.decline-small').addEventListener('click', () => showToast('این کارت نمونه است. هیچ درخواستی رد یا تغییر داده نشد.'));
 document.getElementById('detailsBtn').addEventListener('click', () => showToast('این بخش فقط به سند نمونه اشاره می‌کند؛ حکم زنده‌ای برای نمایش وجود ندارد.'));
 document.getElementById('addGatewayBtn').addEventListener('click', () => openGatewayForm());
 document.getElementById('cancelGatewayBtn').addEventListener('click', closeGatewayForm);
@@ -202,5 +204,5 @@ document.getElementById('saveGatewayBtn').addEventListener('click', saveGateway)
 document.getElementById('exportGatewayBtn').addEventListener('click', exportGateways);
 
 renderAgents(); renderMessages(); renderGateways(); loadProjectGateways();
-let seconds = 1397;
+let seconds = 0;
 setInterval(() => { if (!isPaused) { seconds += 1; const h = String(Math.floor(seconds / 3600)).padStart(2, '۰'); const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '۰'); const s = String(seconds % 60).padStart(2, '۰'); document.getElementById('elapsed').textContent = `${h}:${m}:${s}`; } }, 1000);
