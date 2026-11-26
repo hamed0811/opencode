@@ -52,3 +52,14 @@ npm run desktop:installer
 ## CI installer artifact
 
 The Windows CI job builds the unpacked application and the NSIS installer. It uploads the installer as the `Council-Room-Windows-Installer` workflow artifact for 14 days. The installer still requires a real target-machine smoke test before release.
+
+
+## Read-only sandbox preflight
+
+Before choosing a Windows isolation backend, run this read-only check from the repository root in PowerShell:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\check-sandbox-prerequisites.ps1
+```
+
+The script reports the Windows edition, virtualization support, optional Windows features, related services, and firewall profile defaults. It does not enable features or change firewall settings. The report alone does not prove that a secure sandbox is configured.
