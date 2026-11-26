@@ -14,12 +14,34 @@ function serializeBounded(value, limit = MAX_RESULT_CHARS) {
   return serialized.slice(0, limit) + '…[truncated]';
 }
 
+function compactSchema(schema, depth = 0) {
+  if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return { type: 'object' };
+  const result = {};
+  if (typeof schema.type === 'string') result.type = schema.type;
+  if (Array.isArray(schema.required)) result.required = schema.required.slice(0, 30);
+  if (schema.additionalProperties === false) result.additionalProperties = false;
+  if (schema.properties && typeof schema.properties === 'object' && depth < 2) {
+    result.properties = {};
+    for (const [key, value] of Object.entries(schema.properties).slice(0, 30)) {
+      const property = value && typeof value === 'object' ? value : {};
+      const item = {};
+      if (typeof property.type === 'string') item.type = property.type;
+      if (typeof property.description === 'string') item.description = property.description.slice(0, 180);
+      if (Array.isArray(property.enum)) item.enum = property.enum.slice(0, 12);
+      if (property.items && typeof property.items === 'object') item.items = { type: property.items.type || 'object' };
+      if (property.properties && depth < 1) item.properties = compactSchema(property, depth + 1).properties;
+      result.properties[key] = item;
+    }
+  }
+  return result;
+}
+
 function buildMotionStudioPrompt(userPrompt, tools, previousResults = []) {
   const catalog = tools.map(tool => ({
     name: tool.name,
     access: tool.access,
-    description: String(tool.description || '').slice(0, 500),
-    inputSchema: tool.inputSchema || { type: 'object', properties: {} }
+    description: String(tool.description || '').slice(0, 250),
+    inputSchema: compactSchema(tool.inputSchema)
   }));
   return [
     'نقش تو دستیار Motion Studio برای نرم‌افزار Concat است.',
@@ -131,6 +153,7 @@ module.exports = {
   MAX_ACTIONS,
   MAX_ACTIONS_PER_ROUND,
   buildMotionStudioPrompt,
+  compactSchema,
   parseMotionPlan,
   runMotionStudioAgent
 };
