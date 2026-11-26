@@ -15,6 +15,8 @@ permissions:
 
 jobs:
   electron-lockfile:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,6 +27,18 @@ jobs:
           node-version: 22
       - name: Resolve Electron lockfile without install scripts
         run: npm install --package-lock-only --ignore-scripts
+      - name: Commit generated lockfile on feature pushes
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "Lockfile is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "chore: refresh Electron 45 lockfile"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
       - name: Upload generated lockfile
         uses: actions/upload-artifact@v4
         with:
