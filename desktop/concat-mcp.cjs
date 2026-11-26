@@ -15,7 +15,7 @@ const EXPORT_TIMEOUT_MS = 15 * 60 * 1000;
 const READ_ONLY_TOOLS = new Set([
   'concat_version', 'project_list', 'timeline_read', 'project_get',
   'media_probe', 'shapes_list', 'effects_list', 'template_list',
-  'preview_frame', 'project_cover', 'clips_bounds', 'export_status'
+  'preview_frame', 'project_cover', 'clips_bounds', 'export_status', 'export_wait'
 ]);
 
 const MUTATING_TOOLS = new Set([
@@ -107,19 +107,24 @@ class ConcatMcpClient extends EventEmitter {
       child.once('error', error => { clearTimeout(timer); reject(new Error(error.code || 'concat_spawn_failed')); });
     });
 
-    const initialized = await this._request('initialize', {
-      protocolVersion: '2025-11-25',
-      capabilities: {},
-      clientInfo: { name: 'council-room', version: '0.1.0' }
-    }, DEFAULT_TIMEOUT_MS);
-    if (!initialized || typeof initialized !== 'object') throw new Error('concat_invalid_initialize_response');
-    this.serverInfo = initialized.serverInfo || null;
-    this._notify('notifications/initialized', {});
-    this.tools = await this._listAllTools();
-    if (!this.tools.some(tool => tool.name === 'concat_version')) throw new Error('concat_version_tool_missing');
-    const version = await this.callTool('concat_version', {});
-    this.started = true;
-    return { ok: true, command: this.command, mode: 'window', serverInfo: this.serverInfo, version, tools: this.getVisibleTools() };
+    try {
+      const initialized = await this._request('initialize', {
+        protocolVersion: '2025-11-25',
+        capabilities: {},
+        clientInfo: { name: 'council-room', version: '0.1.0' }
+      }, DEFAULT_TIMEOUT_MS);
+      if (!initialized || typeof initialized !== 'object') throw new Error('concat_invalid_initialize_response');
+      this.serverInfo = initialized.serverInfo || null;
+      this._notify('notifications/initialized', {});
+      this.tools = await this._listAllTools();
+      if (!this.tools.some(tool => tool.name === 'concat_version')) throw new Error('concat_version_tool_missing');
+      const version = await this.callTool('concat_version', {});
+      this.started = true;
+      return { ok: true, command: this.command, mode: 'window', serverInfo: this.serverInfo, version, tools: this.getVisibleTools() };
+    } catch (error) {
+      this.close();
+      throw error;
+    }
   }
 
   async _listAllTools() {
