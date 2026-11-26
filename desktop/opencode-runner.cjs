@@ -43,7 +43,7 @@ function parseOpenCodeModels(output) {
   return [...new Set(text.match(/\b[a-zA-Z0-9._-]+\/[a-zA-Z0-9._:/#-]+\b/g) || [])].slice(0, 1000);
 }
 
-function listOpenCodeModels(options = {})
+function listOpenCodeModels(options = {}) {
   let cwd;
   try { cwd = resolveWorkspace(options.workspaceRoot, options.cwd); }
   catch (error) { return Promise.reject(error); }
