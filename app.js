@@ -1,5 +1,5 @@
 const agents = [
-  { id: 'pm', name: 'مدیر پروژه', role: 'هماهنگ‌کننده', initial: 'م', cls: 'judge-avatar', status: 'در حال هماهنگی', statusCls: 'active-status', active: false },
+  { id: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', status: 'در حال هماهنگی', statusCls: 'active-status', active: false },
   { id: 'architect', name: 'معمار نرم‌افزار', role: 'معماری runtime', initial: 'م', cls: 'architect-avatar', status: 'در حال بررسی', statusCls: 'active-status', active: true },
   { id: 'backend', name: 'متخصص بک‌اند', role: 'Tool API و اجرا', initial: 'ب', cls: 'backend-avatar', status: 'تکمیل‌شده', statusCls: 'done-status' },
   { id: 'frontend', name: 'متخصص فرانت‌اند', role: 'داشبورد و UX', initial: 'ف', cls: 'frontend-avatar', status: 'منتظر', statusCls: '' },
@@ -10,7 +10,7 @@ const agents = [
   { id: 'critic', name: 'منتقد مخالف', role: 'پیدا کردن ریسک‌ها', initial: 'ن', cls: 'critic-avatar', status: 'در حال نقد', statusCls: 'active-status' }
 ];
 const messages = [
-  { id: 1, agent: 'pm', name: 'مدیر پروژه', role: 'هماهنگ‌کننده', initial: 'م', cls: 'judge-avatar', time: 'همین الان', body: 'درخواست دریافت شد: برای مخزن <em>opencode</em> یک runtime بسازیم که وظایف برنامه‌نویسی را به ایجنت‌ها بسپارد، خروجی را در اتاق ثبت کند و در پایان Pull Request پیشنهاد دهد.', tags: [{ text: 'درخواست اصلی', type: '' }] },
+  { id: 1, agent: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', time: 'همین الان', body: 'درخواست دریافت شد: برای مخزن <em>opencode</em> یک runtime بسازیم که وظایف برنامه‌نویسی را به ایجنت‌ها بسپارد، خروجی را در اتاق ثبت کند و در پایان Pull Request پیشنهاد دهد.', tags: [{ text: 'درخواست اصلی', type: '' }] },
   { id: 2, agent: 'architect', name: 'معمار نرم‌افزار', role: 'معماری runtime', initial: 'م', cls: 'architect-avatar', time: '۱ دقیقه پیش', body: 'پیشنهاد من <em>Modular Agent Runtime</em> است: Orchestrator، Message Bus، Tool Runner و Event Store جدا باشند؛ اما برای فاز صفر در یک repository و با interfaceهای مستقل شروع کنیم.', tags: [{ text: 'پیشنهاد معماری', type: '' }] },
   { id: 3, agent: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', time: '۲ دقیقه پیش', body: 'موافقم، مشروط به اینکه اجرای shell و Git در sandbox انجام شود. <span class="highlight">توکن GitHub و کلید OpenAI نباید وارد پیام ایجنت‌ها، لاگ یا Pull Request شوند.</span>', tags: [{ text: 'ریسک بالا', type: 'critical' }, { text: 'در پاسخ به معمار', type: 'reply' }] },
   { id: 4, agent: 'backend', name: 'متخصص بک‌اند', role: 'Tool API و اجرا', initial: 'ب', cls: 'backend-avatar', time: '۳ دقیقه پیش', body: 'برای هر اجرا یک <em>run_id</em> و برای هر پیام یک event_id تولید می‌کنیم. Tool Runner فقط allowlist ابزارها را قبول می‌کند و نتیجه را ساختاریافته به Orchestrator برمی‌گرداند.', tags: [{ text: 'قابل اجرا', type: '' }] },
@@ -71,7 +71,7 @@ function showToast(text) { toast.textContent = text; toast.classList.add('show')
 function addMessage() {
   const value = messageInput.value.trim();
   if (!value) { showToast('اول یک پیام یا دستور برای اتاق بنویسید.'); messageInput.focus(); return; }
-  messages.unshift({ id: Date.now(), agent: 'pm', name: 'شما · مدیر پروژه', role: 'دستور مالک پروژه', initial: 'ح', cls: 'judge-avatar', time: 'همین الان', body: escapeHtml(value), tags: [{ text: 'دستور جدید', type: 'reply' }] });
+  messages.unshift({ id: Date.now(), agent: 'pm', name: 'شما · مالک پروژه', role: 'دستور به پرشین', initial: 'ح', cls: 'judge-avatar', time: 'همین الان', body: escapeHtml(value), tags: [{ text: 'دستور جدید', type: 'reply' }] });
   agentFilter.value = 'all'; currentView = 'all'; document.querySelectorAll('.view-toggle').forEach(button => button.classList.toggle('active', button.dataset.view === 'all')); renderMessages(); messageInput.value = ''; messageInput.style.height = 'auto'; messageTotal += 1; document.getElementById('messageCount').textContent = toPersianDigits(messageTotal); showToast('دستور شما به اتاق مشورت ارسال شد.');
 }
 function gatewayStatus(profile) {
