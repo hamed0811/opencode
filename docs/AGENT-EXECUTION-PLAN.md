@@ -64,7 +64,7 @@ If the selected Windows edition cannot support the approved backend, execution s
 Concat is an independent local application. Its MCP server uses stdio JSON-RPC.
 
 Expected Windows command:
-`%LOCALAPPDATA%\\Programs\\Concat\\concat.exe --mcp`
+`%LOCALAPPDATA%\\Programs\\Concat\\concat.exe --mcp window`
 
 Integration requirements:
 - resolve the executable from the current user's LocalAppData or a user-approved path;
