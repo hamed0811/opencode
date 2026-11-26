@@ -213,13 +213,26 @@ app.whenReady().then(() => {
     if (!concatClient || !concatClient.started) throw new Error('concat_not_connected');
     const tools = concatClient.getVisibleTools();
     const privateWorkspace = app.getPath('userData');
-    const safeRuntimeConfig = { tools: { '*': false }, permission: { '*': 'deny' } };
+    const safeRuntimeConfig = {
+      tools: { '*': false },
+      permission: { '*': 'deny' },
+      agent: {
+        'council-motion-studio': {
+          mode: 'primary',
+          description: 'Plans Concat editing actions. It has no direct tools.',
+          prompt: 'Return a JSON plan only. Do not use tools. The Council Room host executes approved Concat operations.',
+          tools: { '*': false },
+          permission: { '*': 'deny' },
+          steps: 4
+        }
+      }
+    };
     return runMotionStudioAgent({
       prompt: payload.prompt,
       tools,
       runModel: prompt => runOpenCodePrompt(prompt, {
         model: payload.model,
-        agent: 'plan',
+        agent: 'council-motion-studio',
         workspaceRoot: privateWorkspace,
         cwd: privateWorkspace,
         standalone: true,
