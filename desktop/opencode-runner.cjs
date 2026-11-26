@@ -114,14 +114,13 @@ function runOpenCodePrompt(prompt, options = {}) {
   catch (error) { return Promise.reject(error); }
   if (options.model) env.COUNCIL_OPENCODE_MODEL = String(options.model);
   if (agent) env.COUNCIL_OPENCODE_AGENT = agent;
-  if (options.standalone === true) env.COUNCIL_OPENCODE_STANDALONE = '1';
 
   const windows = process.platform === 'win32';
   const executable = windows ? 'powershell.exe' : command;
   const args = windows
     ? ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
-      "$ErrorActionPreference='Stop'; $cliArgs=@('run'); if ($env:COUNCIL_OPENCODE_STANDALONE -eq '1') { $cliArgs += '--standalone' }; if ($env:COUNCIL_OPENCODE_AGENT) { $cliArgs += @('--agent',$env:COUNCIL_OPENCODE_AGENT) }; if ($env:COUNCIL_OPENCODE_MODEL) { $cliArgs += @('--model',$env:COUNCIL_OPENCODE_MODEL) }; $cliArgs += $env:COUNCIL_OPENCODE_PROMPT; & $env:COUNCIL_OPENCODE_CLI @cliArgs; exit $LASTEXITCODE"]
-    : ['run', ...(options.standalone === true ? ['--standalone'] : []), ...(agent ? ['--agent', agent] : []), ...(options.model ? ['--model', String(options.model)] : []), text];
+      "$ErrorActionPreference='Stop'; $cliArgs=@('run'); if ($env:COUNCIL_OPENCODE_AGENT) { $cliArgs += @('--agent',$env:COUNCIL_OPENCODE_AGENT) }; if ($env:COUNCIL_OPENCODE_MODEL) { $cliArgs += @('--model',$env:COUNCIL_OPENCODE_MODEL) }; $cliArgs += $env:COUNCIL_OPENCODE_PROMPT; & $env:COUNCIL_OPENCODE_CLI @cliArgs; exit $LASTEXITCODE"]
+    : ['run', ...(agent ? ['--agent', agent] : []), ...(options.model ? ['--model', String(options.model)] : []), text];
 
   return new Promise((resolve, reject) => {
     let abortHandler;
