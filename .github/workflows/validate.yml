@@ -40,6 +40,13 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Check sandbox preflight script syntax
+        shell: powershell
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("scripts/check-sandbox-prerequisites.ps1", [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) { $errors | Format-List; exit 1 }
       - name: Syntax and unit tests
         run: npm run check
       - name: Build unpacked Windows app

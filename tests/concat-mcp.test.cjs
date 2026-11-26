@@ -76,6 +76,14 @@ test('Concat child environment excludes API keys and arbitrary secrets', () => {
   assert.equal(env.OPENAI_API_KEY, undefined);
   assert.equal(env.GITHUB_TOKEN, undefined);
   assert.equal(env.CUSTOM_SECRET, undefined);
+  const windowsEnv = buildConcatEnv({
+    PATH: 'C:\\Users\\Tester\\bin;C:\\Windows\\System32',
+    SYSTEMROOT: 'C:\\Windows',
+    LOCALAPPDATA: 'C:\\Users\\Tester\\AppData\\Local'
+  }, 'C:\\Users\\Tester\\AppData\\Local\\Programs\\Concat\\concat.exe', 'win32');
+  assert.equal(windowsEnv.PATH.includes('C:\\Users\\Tester\\bin'), false);
+  assert.match(windowsEnv.PATH, /Concat/);
+  assert.equal(windowsEnv.COMSPEC, 'C:\\Windows\\System32\\cmd.exe');
 });
 
 test('Concat MCP performs initialize, lists approved tools, and calls read-only tools', async () => {
