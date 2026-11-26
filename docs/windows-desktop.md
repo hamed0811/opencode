@@ -6,7 +6,7 @@
 
 ```powershell
 npm install
-$env:COUNCIL_WORKSPACE = "F:\\مسیر\\پروژه"
+$env:COUNCIL_WORKSPACE = "F:\مسیر\پروژه"
 npm run desktop
 ```
 
