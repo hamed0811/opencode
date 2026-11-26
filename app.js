@@ -454,6 +454,84 @@ document.getElementById('checkGatewayBtn').addEventListener('click', () => valid
 document.getElementById('saveGatewayBtn').addEventListener('click', saveGateway);
 document.getElementById('exportGatewayBtn').addEventListener('click', exportGateways);
 
+const motionStudioModal = document.getElementById('motionStudioModal');
+const motionStudioStatus = document.getElementById('motionStudioStatus');
+const motionStudioWorkspace = document.getElementById('motionStudioWorkspace');
+const motionToolSelect = document.getElementById('motionToolSelect');
+const motionToolDescription = document.getElementById('motionToolDescription');
+const motionToolSchema = document.getElementById('motionToolSchema');
+const motionToolArgs = document.getElementById('motionToolArgs');
+const motionToolResult = document.getElementById('motionToolResult');
+const runMotionToolBtn = document.getElementById('runMotionToolBtn');
+let concatTools = [];
+
+function openMotionStudio() {
+  motionStudioModal?.classList.add('open');
+  motionStudioModal?.setAttribute('aria-hidden', 'false');
+}
+function closeMotionStudio() {
+  motionStudioModal?.classList.remove('open');
+  motionStudioModal?.setAttribute('aria-hidden', 'true');
+}
+function renderConcatTools(tools) {
+  concatTools = Array.isArray(tools) ? tools : [];
+  motionToolSelect.innerHTML = '<option value="">ابزار را انتخاب کنید</option>' +
+    concatTools.map(tool => `<option value="${escapeHtml(tool.name)}">${escapeHtml(tool.name)} — ${tool.access === 'write' ? 'تغییر' : 'خواندن'}</option>`).join('');
+  motionStudioWorkspace.hidden = false;
+  motionStudioStatus.textContent = `اتصال برقرار است؛ ${toPersianDigits(concatTools.length)} ابزار مجاز شناسایی شد.`;
+}
+document.getElementById('motionStudioBtn')?.addEventListener('click', openMotionStudio);
+document.getElementById('closeMotionStudio')?.addEventListener('click', closeMotionStudio);
+motionStudioModal?.addEventListener('click', event => { if (event.target === motionStudioModal) closeMotionStudio(); });
+document.getElementById('connectConcatBtn')?.addEventListener('click', async () => {
+  const button = document.getElementById('connectConcatBtn');
+  button.disabled = true;
+  motionStudioStatus.textContent = 'در حال اتصال به Concat…';
+  try {
+    const status = await window.councilCompanion?.connectConcat?.();
+    if (!status?.ok) throw new Error('concat_connection_failed');
+    renderConcatTools(status.tools);
+    motionToolResult.textContent = JSON.stringify({ server: status.serverInfo, version: status.version }, null, 2);
+    showToast('اتصال Motion Studio برقرار شد.');
+  } catch (error) {
+    motionStudioStatus.textContent = `اتصال برقرار نشد: ${error.message || 'خطای ناشناخته'}`;
+    showToast('اتصال Concat ناموفق بود. تنظیم Automation را بررسی کن.');
+  } finally { button.disabled = false; }
+});
+motionToolSelect?.addEventListener('change', () => {
+  const tool = concatTools.find(item => item.name === motionToolSelect.value);
+  motionToolDescription.textContent = tool?.description || '';
+  motionToolSchema.textContent = tool ? JSON.stringify(tool.inputSchema, null, 2) : '';
+  motionToolArgs.value = '{}';
+  runMotionToolBtn.disabled = !tool;
+});
+runMotionToolBtn?.addEventListener('click', async () => {
+  const name = motionToolSelect.value;
+  if (!name) return;
+  let args;
+  try { args = JSON.parse(motionToolArgs.value || '{}'); }
+  catch { showToast('ورودی JSON معتبر نیست.'); return; }
+  runMotionToolBtn.disabled = true;
+  motionToolResult.textContent = 'در حال اجرا…';
+  try {
+    const response = await window.councilCompanion.callConcatTool(name, args);
+    motionToolResult.textContent = JSON.stringify(response, null, 2);
+    if (response.cancelled) showToast('عملیات لغو شد.');
+    else showToast('ابزار Concat اجرا شد.');
+  } catch (error) {
+    motionToolResult.textContent = error.message || 'concat_tool_failed';
+    showToast('اجرای ابزار Concat ناموفق بود.');
+  } finally { runMotionToolBtn.disabled = false; }
+});
+document.getElementById('disconnectConcatBtn')?.addEventListener('click', async () => {
+  try { await window.councilCompanion?.disconnectConcat?.(); } catch {}
+  concatTools = [];
+  motionStudioWorkspace.hidden = true;
+  motionToolSelect.innerHTML = '<option value="">ابزار را انتخاب کنید</option>';
+  motionStudioStatus.textContent = 'اتصال قطع شد.';
+  motionToolResult.textContent = 'هنوز دستوری اجرا نشده است.';
+});
+
 renderAgents(); renderMessages(); renderGateways(); loadProjectGateways();
 loadAgentModelSettings();
 document.getElementById('refreshModelsBtn')?.addEventListener('click', loadCouncilModelCatalog);
