@@ -7,6 +7,18 @@ contextBridge.exposeInMainWorld('councilCompanion', {
   connectConcat: () => ipcRenderer.invoke('concat:connect'),
   disconnectConcat: () => ipcRenderer.invoke('concat:disconnect'),
   callConcatTool: (name, args = {}) => ipcRenderer.invoke('concat:call', { name, args }),
+  onConcatNotification: callback => {
+    if (typeof callback !== 'function') return () => {};
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on('concat:notification', listener);
+    return () => ipcRenderer.removeListener('concat:notification', listener);
+  },
+  onConcatExit: callback => {
+    if (typeof callback !== 'function') return () => {};
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on('concat:exit', listener);
+    return () => ipcRenderer.removeListener('concat:exit', listener);
+  },
   loadProjectConfig: () => ipcRenderer.invoke('companion:load-project-config'),
   runOpenCodePrompt: (prompt, options = {}) => ipcRenderer.invoke('opencode:run-prompt', {
     prompt,
