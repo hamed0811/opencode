@@ -1,13 +1,13 @@
 const agents = [
-  { id: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', status: 'نمونه', statusCls: 'active-status', active: false },
-  { id: 'architect', name: 'معمار نرم‌افزار', role: 'معماری runtime', initial: 'م', cls: 'architect-avatar', status: 'نمونه', statusCls: 'active-status', active: true },
-  { id: 'backend', name: 'متخصص بک‌اند', role: 'Tool API و اجرا', initial: 'ب', cls: 'backend-avatar', status: 'نمونه', statusCls: 'done-status' },
+  { id: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', status: 'نمونه', statusCls: '', active: false },
+  { id: 'architect', name: 'معمار نرم‌افزار', role: 'معماری runtime', initial: 'م', cls: 'architect-avatar', status: 'نمونه', statusCls: '', active: false },
+  { id: 'backend', name: 'متخصص بک‌اند', role: 'Tool API و اجرا', initial: 'ب', cls: 'backend-avatar', status: 'نمونه', statusCls: '' },
   { id: 'frontend', name: 'متخصص فرانت‌اند', role: 'داشبورد و UX', initial: 'ف', cls: 'frontend-avatar', status: 'نمونه', statusCls: '' },
-  { id: 'db', name: 'متخصص دیتابیس', role: 'State و event log', initial: 'د', cls: 'db-avatar', status: 'نمونه', statusCls: 'done-status' },
-  { id: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', status: 'نمونه', statusCls: 'active-status' },
+  { id: 'db', name: 'متخصص دیتابیس', role: 'State و event log', initial: 'د', cls: 'db-avatar', status: 'نمونه', statusCls: '' },
+  { id: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', status: 'نمونه', statusCls: '' },
   { id: 'qa', name: 'متخصص تست', role: 'کیفیت و CI', initial: 'ت', cls: 'qa-avatar', status: 'نمونه', statusCls: '' },
-  { id: 'devops', name: 'متخصص DevOps', role: 'Branch و Pull Request', initial: 'د', cls: 'devops-avatar', status: 'نمونه', statusCls: 'done-status' },
-  { id: 'critic', name: 'منتقد مخالف', role: 'پیدا کردن ریسک‌ها', initial: 'ن', cls: 'critic-avatar', status: 'نمونه', statusCls: 'active-status' }
+  { id: 'devops', name: 'متخصص DevOps', role: 'Branch و Pull Request', initial: 'د', cls: 'devops-avatar', status: 'نمونه', statusCls: '' },
+  { id: 'critic', name: 'منتقد مخالف', role: 'پیدا کردن ریسک‌ها', initial: 'ن', cls: 'critic-avatar', status: 'نمونه', statusCls: '' }
 ];
 const messages = [
   { id: 1, agent: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', time: 'نمونه', body: 'درخواست دریافت شد: برای مخزن <em>opencode</em> یک runtime بسازیم که وظایف برنامه‌نویسی را به ایجنت‌ها بسپارد، خروجی را در اتاق ثبت کند و در پایان Pull Request پیشنهاد دهد.', tags: [{ text: 'درخواست اصلی', type: '' }] },
