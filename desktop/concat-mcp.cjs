@@ -40,7 +40,12 @@ function resolveConcatCommand(env = process.env, platform = process.platform) {
   ].filter(Boolean);
   for (const candidate of candidates) {
     try {
-      if (fs.statSync(candidate).isFile()) return fs.realpathSync(candidate);
+      if (!fs.statSync(candidate).isFile()) continue;
+      const canonical = fs.realpathSync(candidate);
+      const root = fs.realpathSync(path.dirname(candidate));
+      const relative = path.relative(root, canonical);
+      if (relative === '..' || relative.startsWith('..' + path.sep) || path.isAbsolute(relative)) continue;
+      return canonical;
     } catch {}
   }
   throw new Error('concat_not_found');
@@ -155,6 +160,7 @@ class ConcatMcpClient extends EventEmitter {
 
   async callTool(name, args = {}) {
     if (!READ_ONLY_TOOLS.has(name) && !MUTATING_TOOLS.has(name)) throw new Error('concat_tool_not_allowed');
+    if (!this.tools.some(tool => tool.name === name)) throw new Error('concat_tool_unavailable');
     if (!this.child || this.child.killed) throw new Error('concat_not_connected');
     if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('concat_invalid_tool_arguments');
     if (Buffer.byteLength(JSON.stringify(args), 'utf8') > MAX_ARGUMENT_BYTES) throw new Error('concat_tool_arguments_too_large');
