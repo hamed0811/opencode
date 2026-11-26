@@ -1,32 +1,56 @@
 # نسخه دسکتاپ ویندوزی Council Room
 
-این پروژه اکنون دو حالت دارد: نسخه وب فعلی و نسخه دسکتاپ Electron. نسخه دسکتاپ همان داشبورد را در یک پنجره مستقل ویندوز اجرا می‌کند و از طریق Windows Companion فقط ابزارهای مجاز را شناسایی می‌کند.
+این پروژه دو حالت دارد: نسخه وب و نسخه دسکتاپ Electron. نسخه دسکتاپ داشبورد را در یک پنجره مستقل اجرا می‌کند.
 
-## اجرای توسعه
+## اجرای توسعه در PowerShell
 
 ```powershell
 npm install
+$env:COUNCIL_WORKSPACE = "F:\\مسیر\\پروژه"
 npm run desktop
 ```
 
-## ساخت Installer و نسخه Portable روی ویندوز
+اگر `COUNCIL_WORKSPACE` را تنظیم نکنید، برنامه از پوشه جداگانه زیر استفاده می‌کند:
+
+```
+<userData>\\workspace
+```
+
+Runner مسیر واقعی پوشه را بررسی می‌کند. اجرای خارج از Workspace رد می‌شود. Renderer نمی‌تواند مقدار `cwd` را انتخاب کند.
+
+## ساخت Installer و نسخه Portable
 
 ```powershell
 npm run desktop:installer
 ```
 
-خروجی‌ها در پوشه `dist/` ساخته می‌شوند: یک Installer قابل نصب و یک نسخه Portable.
+خروجی‌ها در پوشه `dist/` ساخته می‌شوند.
 
-## شناسایی ایجنت‌ها
+## شناسایی ابزارها
 
-Companion فقط وجود executableها و نسخه آن‌ها را بررسی می‌کند؛ محتوای پروژه‌ها، فایل‌های شخصی و Secretها را بدون مجوز نمی‌خواند. موارد اولیه شامل OpenCode، Claude Code، Cursor، Cline، Aider، Gemini CLI، Git، Node.js، Python، Docker و VS Code است.
+Companion وجود executableها و نسخه آن‌ها را بررسی می‌کند. این کار به معنی اجرای Agent مستقل نیست. ابزارهای شناسایی‌شده شامل OpenCode، Claude Code، Cursor، Cline، Aider، Gemini CLI، Git، Node.js، Python، Docker و VS Code هستند.
 
-نتیجه از طریق API محدود `window.councilCompanion.detectLocalTools()` در اختیار رابط قرار می‌گیرد. کلید OpenAI و GitHub نباید در frontend یا فایل نصب قرار گیرند؛ برای اتصال واقعی باید در Secret امن سرور یا Windows Credential Manager ثبت شوند.
+## اجرای OpenCode
 
-## مدل امنیتی
+در نسخه فعلی، هر پیام کاربر یک درخواست به `opencode run` می‌فرستد. در ویندوز، مسیر CLI با `where.exe` پیدا می‌شود. فایل‌های اجرایی معمولی و shimهای npm مانند `.cmd` از طریق PowerShell فراخوانی می‌شوند.
 
-Electron با `contextIsolation`، بدون `nodeIntegration` و با preload محدود اجرا می‌شود. اجرای کد، تغییر فایل، push و ساخت Pull Request باید از policy و تأیید انسانی عبور کند. Merge و force-push در اختیار Companion نیست.
+این قابلیت هنوز Orchestrator چندایجنتی نیست. ایجنت‌های نمایش‌داده‌شده و پیام‌های اولیه در رابط نمونه هستند.
 
-## وضعیت فعلی
+## امنیت Electron
 
-پوسته دسکتاپ و API شناسایی آماده است. اتصال زنده به OpenAI، اتصال repository و ساخت Pull Request واقعی باید در مرحله سرور/Connector تکمیل شود؛ داشبورد فعلی سناریوی نمونه را نشان می‌دهد.
+- `contextIsolation` فعال است.
+- `nodeIntegration` خاموش است.
+- `sandbox` فعال است.
+- پنجره‌های جدید و navigation از Renderer مسدود هستند.
+- IPC فقط درخواست‌های پنجره اصلی و frame اصلی را می‌پذیرد.
+- مسیر Workspace در Main Process تعیین می‌شود.
+- مسیر واقعی پوشه بررسی می‌شود تا خروج از Workspace و عبور از symlink رد شود.
+
+## محدودیت‌های فعلی
+
+- Orchestrator و اجرای مستقل چند Agent هنوز پیاده‌سازی نشده‌اند.
+- دکمه‌های تأیید و رد هنوز گردش‌کار واقعی ندارند.
+- دکمه Pause فقط شمارنده زمان را متوقف می‌کند.
+- Gatewayها هنوز اتصال واقعی و ذخیره امن Secret ندارند.
+- اتصال GitHub، ساخت Branch و Draft PR هنوز پیاده‌سازی نشده‌اند.
+- تست خودکار فعلی مرز Workspace را پوشش می‌دهد. تست کامل روی Windows هنوز لازم است.
