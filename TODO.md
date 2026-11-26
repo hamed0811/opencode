@@ -1,15 +1,28 @@
 # TODO — Council Room
 
-- [x] Create RTL command-center shell for the multi-agent council.
-- [x] Show agent roster with role, status, and activity indicators.
-- [x] Show live-style discussion timeline with filters and message metadata.
-- [x] Add disagreement threads and cross-critiques.
-- [x] Add final judge panel with decision, confidence, reasons, risks, and next action.
-- [x] Add human approval request block for sensitive actions.
-- [x] Add project-owner composer to send a new instruction into the room.
-- [x] Add responsive desktop/mobile layouts and accessible focus states.
-- [x] Add sample opencode consultation session from intake to Draft Pull Request.
-- [x] Add OpenAI-oriented Orchestrator configuration and system/role prompts.
-- [ ] Connect the server runtime to OpenAI using a protected secret.
-- [ ] Connect GitHub repository hamed0811/opencode after owner confirmation.
-- [ ] Create real branch, run tests, and open a Draft Pull Request from the server.
+## موجود در رابط کاربری
+- [x] Create RTL command-center shell and responsive layouts.
+- [x] Show the agent roster, timeline, filters, disagreement examples, and judge panel as sample UI.
+- [x] Add project-owner composer.
+- [x] Add sample consultation scenario and role prompts.
+
+## Runtime محلی
+- [x] Send one prompt to the local OpenCode CLI from the desktop app.
+- [x] Resolve the Windows OpenCode command through PATH, including npm command shims.
+- [x] Restrict the OpenCode working directory to a canonical workspace root.
+- [x] Validate the trusted Electron IPC sender.
+- [x] Add automated tests for workspace boundary validation.
+- [ ] Implement a real multi-agent orchestrator with independent agent runs.
+- [ ] Persist run state, messages, tool calls, and results in an event store.
+- [ ] Implement real pause/cancel for running tasks.
+- [ ] Implement a real final judge over agent outputs.
+
+## امنیت و یکپارچه‌سازی
+- [ ] Add a user-controlled workspace picker and persist its approved path.
+- [ ] Implement secure secret storage and real provider connection checks.
+- [ ] Implement real approval records linked to specific actions.
+- [ ] Implement GitHub branch, commit, checks, and Draft PR flow.
+- [ ] Add integration and end-to-end tests on Windows.
+- [ ] Verify the packaged Electron app on a real Windows machine.
+
+**وضعیت:** داشبورد هنوز یک جلسه چندایجنتی واقعی نیست. دکمه‌های تأیید و Gateway نیز به سرویس اجرایی متصل نیستند.
