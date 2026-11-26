@@ -1,10 +1,12 @@
 const { app, BrowserWindow, ipcMain, Menu, Tray, shell } = require('electron');
 const path = require('node:path');
+const fs = require('node:fs');
 const { execFile } = require('node:child_process');
 const { runOpenCodePrompt } = require('./opencode-runner.cjs');
 
 let mainWindow;
 let tray;
+let workspaceRoot;
 
 const candidates = [
   { id: 'opencode', name: 'OpenCode', commands: ['opencode'] },
@@ -19,6 +21,17 @@ const candidates = [
   { id: 'docker', name: 'Docker', commands: ['docker'] },
   { id: 'code', name: 'VS Code', commands: ['code'] }
 ];
+
+function assertTrustedSender(event) {
+  if (!mainWindow || event.sender !== mainWindow.webContents || event.senderFrame !== event.sender.mainFrame) {
+    throw new Error('untrusted_ipc_sender');
+  }
+  let url;
+  try { url = new URL(event.senderFrame.url); } catch { throw new Error('invalid_ipc_origin'); }
+  if (url.protocol !== 'file:' || !url.pathname.toLowerCase().endsWith('/index.html')) {
+    throw new Error('untrusted_ipc_origin');
+  }
+}
 
 function runCommand(command, args, timeout = 2500) {
   return new Promise(resolve => {
@@ -75,20 +88,37 @@ function createWindow() {
       sandbox: true
     }
   });
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  mainWindow.webContents.on('will-navigate', event => event.preventDefault());
   mainWindow.loadFile(path.join(__dirname, '..', 'index.html'));
   mainWindow.on('closed', () => { mainWindow = null; });
 }
 
 app.whenReady().then(() => {
-  ipcMain.handle('companion:detect', detectLocalTools);
-  ipcMain.handle('opencode:run-prompt', async (_event, payload = {}) => {
+  workspaceRoot = path.resolve(process.env.COUNCIL_WORKSPACE || path.join(app.getPath('userData'), 'workspace'));
+  fs.mkdirSync(workspaceRoot, { recursive: true });
+
+  ipcMain.handle('companion:detect', async event => {
+    assertTrustedSender(event);
+    return detectLocalTools();
+  });
+  ipcMain.handle('opencode:run-prompt', async (event, payload = {}) => {
+    assertTrustedSender(event);
     try {
-      return { ok: true, result: await runOpenCodePrompt(payload.prompt, { model: payload.model, cwd: payload.cwd }) };
+      if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('invalid_payload');
+      if (typeof payload.prompt !== 'string') throw new Error('invalid_prompt');
+      if (payload.cwd !== undefined) throw new Error('caller_cannot_select_workspace_path');
+      return { ok: true, result: await runOpenCodePrompt(payload.prompt, { model: payload.model, workspaceRoot }) };
     } catch (error) {
       return { ok: false, error: error.message || 'opencode_failed' };
     }
   });
-  ipcMain.handle('companion:open-path', (_event, target) => shell.openPath(target));
+  ipcMain.handle('companion:open-path', (event, target) => {
+    assertTrustedSender(event);
+    if (typeof target !== 'string' || !path.isAbsolute(target)) throw new Error('invalid_path');
+    return shell.openPath(target);
+  });
+
   createWindow();
   tray = new Tray(path.join(__dirname, 'tray-icon.png'));
   tray.setToolTip('Council Room — Windows Companion');
