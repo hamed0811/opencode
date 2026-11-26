@@ -15,7 +15,7 @@ Council Room coordinates specialist agents, records their events, compares their
 - Session history is stored locally as JSONL and can be replayed.
 - A default model and per-role model overrides can be selected from the installed OpenCode model catalog.
 - Windows process-tree cancellation is supported.
-- An initial Concat MCP bridge and Motion Studio panel are implemented on the feature branch. The bridge uses a fixed executable path, a restricted child environment, an explicit tool allowlist, and native confirmation for write operations. Real Windows validation is still pending.
+- The initial Concat MCP bridge and AI Motion Studio planner are implemented on the feature branch. The planner has no direct OpenCode tools. The Electron main process validates Concat actions and asks for native approval before writes. Real Windows validation is still pending.
 - Human approval decisions are recorded. Approval does not execute code or merge changes.
 - A Windows NSIS installer is built by CI.
 
