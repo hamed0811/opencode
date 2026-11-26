@@ -5,6 +5,7 @@ const { execFile } = require('node:child_process');
 const { runOpenCodePrompt, listOpenCodeModels, buildChildEnv } = require('./opencode-runner.cjs');
 const { createCouncilRuntime } = require('./council-runtime.cjs');
 const { ConcatMcpClient, MUTATING_TOOLS, resolveConcatCommand } = require('./concat-mcp.cjs');
+const { runMotionStudioAgent } = require('./motion-studio-agent.cjs');
 
 let mainWindow;
 let tray;
@@ -35,6 +36,27 @@ function assertTrustedSender(event) {
   if (url.protocol !== 'file:' || !url.pathname.toLowerCase().endsWith('/index.html')) {
     throw new Error('untrusted_ipc_origin');
   }
+}
+
+async function runConcatToolWithApproval(name, args = {}) {
+  if (!concatClient || !concatClient.started) throw new Error('concat_not_connected');
+  if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('invalid_concat_arguments');
+  if (MUTATING_TOOLS.has(name)) {
+    const serializedArgs = JSON.stringify(args, null, 2);
+    if (serializedArgs.length > 5000) throw new Error('concat_approval_arguments_too_large_to_review');
+    const choice = await dialog.showMessageBox(mainWindow, {
+      type: 'warning',
+      title: 'تأیید تغییر در Motion Studio',
+      message: 'این ابزار می‌تواند پروژه و فایل‌های ویدئویی را تغییر دهد.',
+      detail: 'ابزار: ' + name + '\nورودی کامل:\n' + serializedArgs + '\nفقط در صورتی ادامه بده که این تغییر را تأیید می‌کنی.',
+      buttons: ['لغو', 'اجرا'],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true
+    });
+    if (choice.response !== 1) return { ok: false, cancelled: true };
+  }
+  return { ok: true, result: await concatClient.callTool(name, args) };
 }
 
 function runCommand(command, args, timeout = 2500) {
@@ -181,26 +203,31 @@ app.whenReady().then(() => {
   });
   ipcMain.handle('concat:call', async (event, payload = {}) => {
     assertTrustedSender(event);
-    if (!concatClient || !concatClient.started) throw new Error('concat_not_connected');
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('invalid_concat_payload');
-    const name = String(payload.name || '');
-    const args = payload.args === undefined ? {} : payload.args;
-    if (MUTATING_TOOLS.has(name)) {
-      const serializedArgs = JSON.stringify(args, null, 2);
-      if (serializedArgs.length > 5000) throw new Error('concat_approval_arguments_too_large_to_review');
-      const choice = await dialog.showMessageBox(mainWindow, {
-        type: 'warning',
-        title: 'تأیید تغییر در Motion Studio',
-        message: 'این ابزار می‌تواند پروژه و فایل‌های ویدئویی را تغییر دهد.',
-        detail: 'ابزار: ' + name + '\nورودی کامل:\n' + serializedArgs + '\nفقط در صورتی ادامه بده که این تغییر را تأیید می‌کنی.',
-        buttons: ['لغو', 'اجرا'],
-        defaultId: 0,
-        cancelId: 0,
-        noLink: true
-      });
-      if (choice.response !== 1) return { ok: false, cancelled: true };
-    }
-    return { ok: true, result: await concatClient.callTool(name, args) };
+    return runConcatToolWithApproval(String(payload.name || ''), payload.args === undefined ? {} : payload.args);
+  });
+  ipcMain.handle('motion:run', async (event, payload = {}) => {
+    assertTrustedSender(event);
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('invalid_motion_payload');
+    if (typeof payload.prompt !== 'string') throw new Error('invalid_motion_prompt');
+    if (!concatClient || !concatClient.started) throw new Error('concat_not_connected');
+    const tools = concatClient.getVisibleTools();
+    const privateWorkspace = app.getPath('userData');
+    const safeRuntimeConfig = { tools: { '*': false }, permission: { '*': 'deny' } };
+    return runMotionStudioAgent({
+      prompt: payload.prompt,
+      tools,
+      runModel: prompt => runOpenCodePrompt(prompt, {
+        model: payload.model,
+        agent: 'plan',
+        workspaceRoot: privateWorkspace,
+        cwd: privateWorkspace,
+        standalone: true,
+        disableProjectConfig: true,
+        configContent: safeRuntimeConfig
+      }),
+      executeTool: runConcatToolWithApproval
+    });
   });
   ipcMain.handle('companion:detect', async event => {
     assertTrustedSender(event);
