@@ -97,6 +97,7 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
   if (typeof runAgent !== 'function') throw new Error('run_agent_required');
   const store = createEventStore(dataRoot);
   const safeAgentModels = Object.fromEntries(Object.entries(agentModels || {}).filter(([id, model]) => /^[a-z][a-z0-9_-]{0,31}$/.test(id) && typeof model === 'string' && model.trim().length > 0 && model.length <= 160).map(([id, model]) => [id, model.trim()]));
+  const workerLimit = Number.isInteger(concurrency) ? Math.max(1, Math.min(6, concurrency)) : 5;
   const active = new Map();
   const approvals = new Map();
 
@@ -125,7 +126,7 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
     try {
       publish(runId, 'run_started', { prompt, status: 'CONSULTING', agents: AGENTS.map(({ id, name, role }) => ({ id, name, role })) });
       const findings = [];
-      await mapConcurrent(AGENTS, concurrency, async agent => {
+      await mapConcurrent(AGENTS, workerLimit, async agent => {
         if (controller.signal.aborted) throw new Error('run_cancelled');
         publish(runId, 'agent_started', { agentId: agent.id, agentName: agent.name, role: agent.role });
         const agentPrompt = agent.system + '\n\nوظیفه:\n' + prompt + '\n\nقواعد:\n' +
