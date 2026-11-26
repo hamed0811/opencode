@@ -1,23 +1,23 @@
 const agents = [
-  { id: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', status: 'در حال هماهنگی', statusCls: 'active-status', active: false },
-  { id: 'architect', name: 'معمار نرم‌افزار', role: 'معماری runtime', initial: 'م', cls: 'architect-avatar', status: 'در حال بررسی', statusCls: 'active-status', active: true },
-  { id: 'backend', name: 'متخصص بک‌اند', role: 'Tool API و اجرا', initial: 'ب', cls: 'backend-avatar', status: 'تکمیل‌شده', statusCls: 'done-status' },
-  { id: 'frontend', name: 'متخصص فرانت‌اند', role: 'داشبورد و UX', initial: 'ف', cls: 'frontend-avatar', status: 'منتظر', statusCls: '' },
-  { id: 'db', name: 'متخصص دیتابیس', role: 'State و event log', initial: 'د', cls: 'db-avatar', status: 'تکمیل‌شده', statusCls: 'done-status' },
-  { id: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', status: 'در حال بررسی', statusCls: 'active-status' },
-  { id: 'qa', name: 'متخصص تست', role: 'کیفیت و CI', initial: 'ت', cls: 'qa-avatar', status: 'منتظر', statusCls: '' },
-  { id: 'devops', name: 'متخصص DevOps', role: 'Branch و Pull Request', initial: 'د', cls: 'devops-avatar', status: 'تکمیل‌شده', statusCls: 'done-status' },
-  { id: 'critic', name: 'منتقد مخالف', role: 'پیدا کردن ریسک‌ها', initial: 'ن', cls: 'critic-avatar', status: 'در حال نقد', statusCls: 'active-status' }
+  { id: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', status: 'نمونه', statusCls: 'active-status', active: false },
+  { id: 'architect', name: 'معمار نرم‌افزار', role: 'معماری runtime', initial: 'م', cls: 'architect-avatar', status: 'نمونه', statusCls: 'active-status', active: true },
+  { id: 'backend', name: 'متخصص بک‌اند', role: 'Tool API و اجرا', initial: 'ب', cls: 'backend-avatar', status: 'نمونه', statusCls: 'done-status' },
+  { id: 'frontend', name: 'متخصص فرانت‌اند', role: 'داشبورد و UX', initial: 'ف', cls: 'frontend-avatar', status: 'نمونه', statusCls: '' },
+  { id: 'db', name: 'متخصص دیتابیس', role: 'State و event log', initial: 'د', cls: 'db-avatar', status: 'نمونه', statusCls: 'done-status' },
+  { id: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', status: 'نمونه', statusCls: 'active-status' },
+  { id: 'qa', name: 'متخصص تست', role: 'کیفیت و CI', initial: 'ت', cls: 'qa-avatar', status: 'نمونه', statusCls: '' },
+  { id: 'devops', name: 'متخصص DevOps', role: 'Branch و Pull Request', initial: 'د', cls: 'devops-avatar', status: 'نمونه', statusCls: 'done-status' },
+  { id: 'critic', name: 'منتقد مخالف', role: 'پیدا کردن ریسک‌ها', initial: 'ن', cls: 'critic-avatar', status: 'نمونه', statusCls: 'active-status' }
 ];
 const messages = [
-  { id: 1, agent: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', time: 'همین الان', body: 'درخواست دریافت شد: برای مخزن <em>opencode</em> یک runtime بسازیم که وظایف برنامه‌نویسی را به ایجنت‌ها بسپارد، خروجی را در اتاق ثبت کند و در پایان Pull Request پیشنهاد دهد.', tags: [{ text: 'درخواست اصلی', type: '' }] },
-  { id: 2, agent: 'architect', name: 'معمار نرم‌افزار', role: 'معماری runtime', initial: 'م', cls: 'architect-avatar', time: '۱ دقیقه پیش', body: 'پیشنهاد من <em>Modular Agent Runtime</em> است: Orchestrator، Message Bus، Tool Runner و Event Store جدا باشند؛ اما برای فاز صفر در یک repository و با interfaceهای مستقل شروع کنیم.', tags: [{ text: 'پیشنهاد معماری', type: '' }] },
-  { id: 3, agent: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', time: '۲ دقیقه پیش', body: 'موافقم، مشروط به اینکه اجرای shell و Git در sandbox انجام شود. <span class="highlight">توکن GitHub و کلید OpenAI نباید وارد پیام ایجنت‌ها، لاگ یا Pull Request شوند.</span>', tags: [{ text: 'ریسک بالا', type: 'critical' }, { text: 'در پاسخ به معمار', type: 'reply' }] },
-  { id: 4, agent: 'backend', name: 'متخصص بک‌اند', role: 'Tool API و اجرا', initial: 'ب', cls: 'backend-avatar', time: '۳ دقیقه پیش', body: 'برای هر اجرا یک <em>run_id</em> و برای هر پیام یک event_id تولید می‌کنیم. Tool Runner فقط allowlist ابزارها را قبول می‌کند و نتیجه را ساختاریافته به Orchestrator برمی‌گرداند.', tags: [{ text: 'قابل اجرا', type: '' }] },
-  { id: 5, agent: 'critic', name: 'منتقد مخالف', role: 'پیدا کردن ریسک‌ها', initial: 'ن', cls: 'critic-avatar', time: '۴ دقیقه پیش', body: 'اگر Orchestrator بتواند مستقیماً branch اصلی را تغییر دهد، یک تصمیم اشتباه می‌تواند کد را خراب کند. پیشنهاد می‌کنم PR اجباری باشد و merge همیشه بعد از تأیید انسانی بماند.', tags: [{ text: 'چالش باز', type: 'critical' }] },
-  { id: 6, agent: 'qa', name: 'متخصص تست', role: 'کیفیت و CI', initial: 'ت', cls: 'qa-avatar', time: '۶ دقیقه پیش', body: 'حداقل تست فاز صفر: unit برای router، integration برای Message Bus، تست permission برای Tool Runner و یک سناریوی end-to-end که از درخواست تا draft PR را طی کند.', tags: [{ text: 'سناریوی تست', type: '' }] },
-  { id: 7, agent: 'devops', name: 'متخصص DevOps', role: 'Branch و Pull Request', initial: 'د', cls: 'devops-avatar', time: '۷ دقیقه پیش', body: 'workflow باید روی branch با نام <em>agent/opencode-bootstrap</em> اجرا شود. CI بعد از push، lint و test را اجرا می‌کند و فقط در صورت سبز بودن، PR draft ساخته می‌شود.', tags: [{ text: 'GitHub flow', type: '' }] },
-  { id: 8, agent: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', time: '۸ دقیقه پیش', body: 'یک شرط دیگر: ابزارها باید با policy صریح فراخوانی شوند؛ دسترسی شبکه پیش‌فرض خاموش باشد و هر درخواست خارج از policy به تأیید انسانی برگردد.', tags: [{ text: 'شرط اجرا', type: 'critical' }] }
+  { id: 1, agent: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', time: 'نمونه', body: 'درخواست دریافت شد: برای مخزن <em>opencode</em> یک runtime بسازیم که وظایف برنامه‌نویسی را به ایجنت‌ها بسپارد، خروجی را در اتاق ثبت کند و در پایان Pull Request پیشنهاد دهد.', tags: [{ text: 'درخواست اصلی', type: '' }] },
+  { id: 2, agent: 'architect', name: 'معمار نرم‌افزار', role: 'معماری runtime', initial: 'م', cls: 'architect-avatar', time: 'نمونه', body: 'پیشنهاد من <em>Modular Agent Runtime</em> است: Orchestrator، Message Bus، Tool Runner و Event Store جدا باشند؛ اما برای فاز صفر در یک repository و با interfaceهای مستقل شروع کنیم.', tags: [{ text: 'پیشنهاد معماری', type: '' }] },
+  { id: 3, agent: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', time: 'نمونه', body: 'موافقم، مشروط به اینکه اجرای shell و Git در sandbox انجام شود. <span class="highlight">توکن GitHub و کلید OpenAI نباید وارد پیام ایجنت‌ها، لاگ یا Pull Request شوند.</span>', tags: [{ text: 'ریسک بالا', type: 'critical' }, { text: 'در پاسخ به معمار', type: 'reply' }] },
+  { id: 4, agent: 'backend', name: 'متخصص بک‌اند', role: 'Tool API و اجرا', initial: 'ب', cls: 'backend-avatar', time: 'نمونه', body: 'برای هر اجرا یک <em>run_id</em> و برای هر پیام یک event_id تولید می‌کنیم. Tool Runner فقط allowlist ابزارها را قبول می‌کند و نتیجه را ساختاریافته به Orchestrator برمی‌گرداند.', tags: [{ text: 'قابل اجرا', type: '' }] },
+  { id: 5, agent: 'critic', name: 'منتقد مخالف', role: 'پیدا کردن ریسک‌ها', initial: 'ن', cls: 'critic-avatar', time: 'نمونه', body: 'اگر Orchestrator بتواند مستقیماً branch اصلی را تغییر دهد، یک تصمیم اشتباه می‌تواند کد را خراب کند. پیشنهاد می‌کنم PR اجباری باشد و merge همیشه بعد از تأیید انسانی بماند.', tags: [{ text: 'چالش باز', type: 'critical' }] },
+  { id: 6, agent: 'qa', name: 'متخصص تست', role: 'کیفیت و CI', initial: 'ت', cls: 'qa-avatar', time: 'نمونه', body: 'حداقل تست فاز صفر: unit برای router، integration برای Message Bus، تست permission برای Tool Runner و یک سناریوی end-to-end که از درخواست تا draft PR را طی کند.', tags: [{ text: 'سناریوی تست', type: '' }] },
+  { id: 7, agent: 'devops', name: 'متخصص DevOps', role: 'Branch و Pull Request', initial: 'د', cls: 'devops-avatar', time: 'نمونه', body: 'workflow باید روی branch با نام <em>agent/opencode-bootstrap</em> اجرا شود. CI بعد از push، lint و test را اجرا می‌کند و فقط در صورت سبز بودن، PR draft ساخته می‌شود.', tags: [{ text: 'GitHub flow', type: '' }] },
+  { id: 8, agent: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', time: 'نمونه', body: 'یک شرط دیگر: ابزارها باید با policy صریح فراخوانی شوند؛ دسترسی شبکه پیش‌فرض خاموش باشد و هر درخواست خارج از policy به تأیید انسانی برگردد.', tags: [{ text: 'شرط اجرا', type: 'critical' }] }
 ];
 
 const defaultGatewayProfiles = [
@@ -78,13 +78,13 @@ async function askOpenCode(prompt) {
   const response = await window.councilCompanion.runOpenCodePrompt(prompt);
   if (!response?.ok) {
     const errorText = response?.error || 'opencode_unavailable';
-    messages.unshift({ id: Date.now() + 1, agent: 'pm', name: 'پرشین', role: 'OpenCode محلی', initial: 'پ', cls: 'judge-avatar', time: 'همین الان', body: `وضعیت اتصال OpenCode: <span class="highlight">${escapeHtml(errorText)}</span>. OpenCode را نصب و در PATH قرار دهید، سپس دوباره تلاش کنید.`, tags: [{ text: 'اتصال ناموفق', type: 'critical' }] });
+    messages.unshift({ id: Date.now() + 1, agent: 'pm', name: 'پرشین', role: 'OpenCode محلی', initial: 'پ', cls: 'judge-avatar', time: 'نمونه', body: `وضعیت اتصال OpenCode: <span class="highlight">${escapeHtml(errorText)}</span>. OpenCode را نصب و در PATH قرار دهید، سپس دوباره تلاش کنید.`, tags: [{ text: 'اتصال ناموفق', type: 'critical' }] });
     renderMessages();
     showToast(`پاسخ OpenCode دریافت نشد: ${errorText}`);
     return;
   }
   const answer = escapeHtml(response.result?.text || 'پاسخ خالی بود.').replace(/\r?\n/g, '<br>');
-  messages.unshift({ id: Date.now() + 1, agent: 'pm', name: 'پرشین', role: `پاسخ تکی OpenCode · ${escapeHtml(response.result?.model || 'catalog')}`, initial: 'پ', cls: 'judge-avatar', time: 'همین الان', body: answer, tags: [{ text: 'پاسخ تکی؛ نه جلسه چندایجنتی', type: 'reply' }] });
+  messages.unshift({ id: Date.now() + 1, agent: 'pm', name: 'پرشین', role: `پاسخ تکی OpenCode · ${escapeHtml(response.result?.model || 'catalog')}`, initial: 'پ', cls: 'judge-avatar', time: 'نمونه', body: answer, tags: [{ text: 'پاسخ تکی؛ نه جلسه چندایجنتی', type: 'reply' }] });
   messageTotal += 1;
   document.getElementById('messageCount').textContent = toPersianDigits(messageTotal);
   renderMessages();
@@ -93,7 +93,7 @@ async function askOpenCode(prompt) {
 function addMessage() {
   const value = messageInput.value.trim();
   if (!value) { showToast('اول یک پیام یا دستور برای اتاق بنویسید.'); messageInput.focus(); return; }
-  messages.unshift({ id: Date.now(), agent: 'pm', name: 'شما · مالک پروژه', role: 'دستور به پرشین', initial: 'ح', cls: 'judge-avatar', time: 'همین الان', body: escapeHtml(value), tags: [{ text: 'دستور جدید', type: 'reply' }] });
+  messages.unshift({ id: Date.now(), agent: 'pm', name: 'شما · مالک پروژه', role: 'دستور به پرشین', initial: 'ح', cls: 'judge-avatar', time: 'نمونه', body: escapeHtml(value), tags: [{ text: 'دستور جدید', type: 'reply' }] });
   agentFilter.value = 'all'; currentView = 'all'; document.querySelectorAll('.view-toggle').forEach(button => button.classList.toggle('active', button.dataset.view === 'all')); renderMessages(); messageInput.value = ''; messageInput.style.height = 'auto'; messageTotal += 1; document.getElementById('messageCount').textContent = toPersianDigits(messageTotal); showToast('دستور شما به اتاق مشورت ارسال شد.');
   askOpenCode(value).catch(error => showToast(`خطای اجرای OpenCode: ${error.message || 'unknown_error'}`));
 }
@@ -204,5 +204,6 @@ document.getElementById('saveGatewayBtn').addEventListener('click', saveGateway)
 document.getElementById('exportGatewayBtn').addEventListener('click', exportGateways);
 
 renderAgents(); renderMessages(); renderGateways(); loadProjectGateways();
+document.getElementById('messageCount').textContent = toPersianDigits(messageTotal);
 let seconds = 0;
 setInterval(() => { if (!isPaused) { seconds += 1; const h = String(Math.floor(seconds / 3600)).padStart(2, '۰'); const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '۰'); const s = String(seconds % 60).padStart(2, '۰'); document.getElementById('elapsed').textContent = `${h}:${m}:${s}`; } }, 1000);
