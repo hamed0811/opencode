@@ -5,7 +5,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { redactText, parseJudgeResult, createEventStore, createCouncilRuntime } = require('../desktop/council-runtime.cjs');
+const { redactText, redactPayload, parseJudgeResult, normalizeAgentModels, createEventStore, createCouncilRuntime } = require('../desktop/council-runtime.cjs');
+const { parseOpenCodeModels } = require('../desktop/opencode-runner.cjs');
 
 function tempDir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'council-runtime-')); }
 function waitFor(events, type, runId) {
@@ -23,10 +24,24 @@ function eventSink() {
   return { emit: event => listeners.forEach(fn => fn(event)), on: fn => { listeners.add(fn); return () => listeners.delete(fn); } };
 }
 
+test('parses unique OpenCode model identifiers from CLI output', () => {
+  assert.deepEqual(parseOpenCodeModels('provider-a/model-one\nprovider-b/model-two\nprovider-a/model-one'), ['provider-a/model-one','provider-b/model-two']);
+});
+
 test('redacts common credentials before persistence', () => {
   const value = redactText('Bearer abcdefghijklmnop sk-abcdefghijklmnop ghp_abcdefghijklmnop OPENAI_API_KEY=secret-value');
   assert.match(value, /\[REDACTED\]/);
   assert.doesNotMatch(value, /secret-value|abcdefghijklmnop/);
+});
+
+test('agent model settings accept only bounded model identifiers', () => {
+  assert.deepEqual(normalizeAgentModels({ architect: 'local/model-a', judge: 'provider/model-b', bad: '', '__proto__': 'x', security: 'x'.repeat(161) }), { architect: 'local/model-a', judge: 'provider/model-b' });
+});
+
+test('redacts credentials in nested event payloads', () => {
+  const payload = redactPayload({ judge: { reasons: ['token sk-abcdefghijklmnop'], risks: [{ mitigation: 'Bearer abcdefghijklmnop' }] } });
+  assert.doesNotMatch(JSON.stringify(payload), /abcdefghijklmnop/);
+  assert.match(JSON.stringify(payload), /REDACTED/);
 });
 
 test('judge parser validates decision and clamps confidence', () => {
@@ -82,7 +97,7 @@ test('per-agent model overrides take precedence over the session model', async (
   const runtime = createCouncilRuntime({
     dataRoot: dir,
     concurrency: 6,
-    agentModels: { architect: 'local/architect-model' },
+    
     emit: sink.emit,
     runAgent: async (_prompt, options) => {
       observed.set(options.agentId, options.model || null);
@@ -91,7 +106,7 @@ test('per-agent model overrides take precedence over the session model', async (
     }
   });
   const done = waitFor(sink, 'run_completed');
-  runtime.start('Check model routing.', { model: 'local/default-model' });
+  runtime.start('Check model routing.', { model: 'local/default-model', agentModels: { architect: 'local/architect-model' } });
   await done;
   assert.equal(observed.get('architect'), 'local/architect-model');
   assert.equal(observed.get('backend'), 'local/default-model');
@@ -131,5 +146,6 @@ test('human approval is recorded once and never runs an action', async () => {
   const recoveredRuntime = createCouncilRuntime({ dataRoot: dir, runAgent: async () => 'unused' });
   assert.equal(recoveredRuntime.recordApproval(runId, true).ok, true);
   assert.throws(() => recoveredRuntime.recordApproval(runId, true), /approval_already_recorded/);
+  assert.equal(recoveredRuntime.history(1)[0].status, 'HUMAN_APPROVAL_REQUIRED');
   fs.rmSync(dir, { recursive: true, force: true });
 });

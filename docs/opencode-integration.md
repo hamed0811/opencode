@@ -25,4 +25,13 @@ Events are sent from Electron Main Process to the renderer through a narrow prel
 
 Cancel aborts the active CLI processes through the AbortSignal supported by Node child_process. Human approval records the user's decision only. It does not execute code, create a Git branch, push, merge, or deploy.
 
-This is a real multi-agent consultation and judgment runtime. Agent-driven code changes, per-agent model selection, OS-level sandboxing, and automated Git handoff remain separate work.
+This is a real multi-agent consultation and judgment runtime. The desktop UI loads persisted session history and reads the installed OpenCode model catalog. Per-role model overrides are saved in local renderer settings and passed to each run. Agent-driven code changes remain disabled until a real OS-level sandbox and controlled execution policy are implemented. Workspace path validation and the plan agent are not a substitute for OS isolation.
+
+
+## Model catalog
+
+The desktop main process runs `opencode models` from the configured workspace. The renderer receives parsed model identifiers only. A model can be selected for the session or overridden for an individual council role. Empty values use the model selected by the user's OpenCode installation.
+
+## Session history
+
+The runtime stores JSONL event logs under Electron userData. The desktop UI loads the recent sessions and can replay saved prompts, role outputs, critic result, judge result, and human decisions. The history is local to this Windows user profile.

@@ -38,9 +38,40 @@ function findOpenCodeCommand() {
   throw new Error('opencode_not_found_in_path');
 }
 
+function parseOpenCodeModels(output) {
+  const text = String(output || '').replace(/\u001b\[[0-9;]*m/g, '');
+  return [...new Set(text.match(/\b[a-zA-Z0-9._-]+\/[a-zA-Z0-9._:/#-]+\b/g) || [])].slice(0, 1000);
+}
+
+function listOpenCodeModels(options = {})
+  let cwd;
+  try { cwd = resolveWorkspace(options.workspaceRoot, options.cwd); }
+  catch (error) { return Promise.reject(error); }
+  let command;
+  try { command = findOpenCodeCommand(); }
+  catch (error) { return Promise.reject(error); }
+  const windows = process.platform === 'win32';
+  const executable = windows ? 'powershell.exe' : command;
+  const args = windows
+    ? ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', "$ErrorActionPreference='Stop'; & $env:COUNCIL_OPENCODE_CLI models; exit $LASTEXITCODE"]
+    : ['models'];
+  const env = { ...buildChildEnv(process.env), COUNCIL_OPENCODE_CLI: command };
+  return new Promise((resolve, reject) => {
+    execFile(executable, args, { cwd, env, windowsHide: true, timeout: 20000, maxBuffer: 2 * 1024 * 1024 }, (error, stdout, stderr) => {
+      if (error) {
+        reject(new Error('opencode_models_failed' + (stderr ? ': ' + String(stderr).trim().slice(0, 300) : '')));
+        return;
+      }
+      const models = parseOpenCodeModels(stdout);
+      resolve({ models, source: 'opencode models', fetchedAt: new Date().toISOString() });
+    });
+  });
+}
+
 function runOpenCodePrompt(prompt, options = {}) {
   const text = String(prompt || '').trim();
   if (!text) return Promise.reject(new Error('prompt_empty'));
+  if (options.model && (!/^[A-Za-z0-9._-]+\/[A-Za-z0-9._:/#-]+$/.test(String(options.model)) || String(options.model).length > 160)) return Promise.reject(new Error('invalid_model_id'));
   if (text.length > MAX_PROMPT_LENGTH) return Promise.reject(new Error('prompt_too_long'));
 
   let cwd;
@@ -112,4 +143,4 @@ function runOpenCodePrompt(prompt, options = {}) {
   });
 }
 
-module.exports = { runOpenCodePrompt, resolveWorkspace, findOpenCodeCommand, buildChildEnv, SAFE_ENV_KEYS, MAX_PROMPT_LENGTH };
+module.exports = { runOpenCodePrompt, listOpenCodeModels, parseOpenCodeModels, resolveWorkspace, findOpenCodeCommand, buildChildEnv, SAFE_ENV_KEYS, MAX_PROMPT_LENGTH };

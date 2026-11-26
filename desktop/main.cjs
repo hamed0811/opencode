@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, Menu, Tray, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { execFile } = require('node:child_process');
-const { runOpenCodePrompt, buildChildEnv } = require('./opencode-runner.cjs');
+const { runOpenCodePrompt, listOpenCodeModels, buildChildEnv } = require('./opencode-runner.cjs');
 const { createCouncilRuntime } = require('./council-runtime.cjs');
 
 let mainWindow;
@@ -121,11 +121,15 @@ app.whenReady().then(() => {
   ipcMain.handle('council:start', (event, payload = {}) => {
     assertTrustedSender(event);
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('invalid_payload');
-    return councilRuntime.start(payload.prompt, { model: payload.model });
+    return councilRuntime.start(payload.prompt, { model: payload.model, agentModels: payload.agentModels });
   });
   ipcMain.handle('council:cancel', (event, runId) => {
     assertTrustedSender(event);
     return councilRuntime.cancel(runId);
+  });
+  ipcMain.handle('council:models', async event => {
+    assertTrustedSender(event);
+    return listOpenCodeModels({ workspaceRoot });
   });
   ipcMain.handle('council:history', event => {
     assertTrustedSender(event);

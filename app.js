@@ -9,16 +9,7 @@ const agents = [
   { id: 'critic', name: 'منتقد مخالف', role: 'نقد متقابل', initial: 'ن', cls: 'critic-avatar', status: 'پس از مشورت', statusCls: '' },
   { id: 'judge', name: 'قاضی نهایی', role: 'حکم مبتنی بر شواهد', initial: 'ق', cls: 'judge-avatar', status: 'پس از نقد', statusCls: '' }
 ];
-const messages = [
-  { id: 1, agent: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', time: 'نمونه', body: 'درخواست دریافت شد: برای مخزن <em>opencode</em> یک runtime بسازیم که وظایف برنامه‌نویسی را به ایجنت‌ها بسپارد، خروجی را در اتاق ثبت کند و در پایان Pull Request پیشنهاد دهد.', tags: [{ text: 'درخواست اصلی', type: '' }] },
-  { id: 2, agent: 'architect', name: 'معمار نرم‌افزار', role: 'معماری runtime', initial: 'م', cls: 'architect-avatar', time: 'نمونه', body: 'پیشنهاد من <em>Modular Agent Runtime</em> است: Orchestrator، Message Bus، Tool Runner و Event Store جدا باشند؛ اما برای فاز صفر در یک repository و با interfaceهای مستقل شروع کنیم.', tags: [{ text: 'پیشنهاد معماری', type: '' }] },
-  { id: 3, agent: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', time: 'نمونه', body: 'موافقم، مشروط به اینکه اجرای shell و Git در sandbox انجام شود. <span class="highlight">توکن GitHub و کلید OpenAI نباید وارد پیام ایجنت‌ها، لاگ یا Pull Request شوند.</span>', tags: [{ text: 'ریسک بالا', type: 'critical' }, { text: 'در پاسخ به معمار', type: 'reply' }] },
-  { id: 4, agent: 'backend', name: 'متخصص بک‌اند', role: 'Tool API و اجرا', initial: 'ب', cls: 'backend-avatar', time: 'نمونه', body: 'برای هر اجرا یک <em>run_id</em> و برای هر پیام یک event_id تولید می‌کنیم. Tool Runner فقط allowlist ابزارها را قبول می‌کند و نتیجه را ساختاریافته به Orchestrator برمی‌گرداند.', tags: [{ text: 'قابل اجرا', type: '' }] },
-  { id: 5, agent: 'critic', name: 'منتقد مخالف', role: 'پیدا کردن ریسک‌ها', initial: 'ن', cls: 'critic-avatar', time: 'نمونه', body: 'اگر Orchestrator بتواند مستقیماً branch اصلی را تغییر دهد، یک تصمیم اشتباه می‌تواند کد را خراب کند. پیشنهاد می‌کنم PR اجباری باشد و merge همیشه بعد از تأیید انسانی بماند.', tags: [{ text: 'چالش باز', type: 'critical' }] },
-  { id: 6, agent: 'qa', name: 'متخصص تست', role: 'کیفیت و CI', initial: 'ت', cls: 'qa-avatar', time: 'نمونه', body: 'حداقل تست فاز صفر: unit برای router، integration برای Message Bus، تست permission برای Tool Runner و یک سناریوی end-to-end که از درخواست تا draft PR را طی کند.', tags: [{ text: 'سناریوی تست', type: '' }] },
-  { id: 7, agent: 'devops', name: 'متخصص DevOps', role: 'Branch و Pull Request', initial: 'د', cls: 'devops-avatar', time: 'نمونه', body: 'workflow باید روی branch با نام <em>agent/opencode-bootstrap</em> اجرا شود. CI بعد از push، lint و test را اجرا می‌کند و فقط در صورت سبز بودن، PR draft ساخته می‌شود.', tags: [{ text: 'GitHub flow', type: '' }] },
-  { id: 8, agent: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', time: 'نمونه', body: 'یک شرط دیگر: ابزارها باید با policy صریح فراخوانی شوند؛ دسترسی شبکه پیش‌فرض خاموش باشد و هر درخواست خارج از policy به تأیید انسانی برگردد.', tags: [{ text: 'شرط اجرا', type: 'critical' }] }
-];
+const messages = [];
 
 const defaultGatewayProfiles = [
   { id: 'opencode-local', name: 'OpenCode محلی', type: 'local-cli', command: 'opencode', model: 'کاتالوگ OpenCode', freeModelsOnly: true, enabled: true, keyConfigured: true, note: 'درگاه پیش‌فرض؛ پاسخ از CLI محلی OpenCode دریافت می‌شود', badge: 'Default / Local' },
@@ -41,7 +32,11 @@ const gatewayForm = document.getElementById('gatewayForm');
 const gatewayCount = document.getElementById('gatewayCount');
 let currentView = 'all';
 let isPaused = false;
-let messageTotal = messages.length;
+let messageTotal = 0;
+let councilHistory = [];
+let selectedHistoryRunId = null;
+let modelCatalog = [];
+const AGENT_MODEL_IDS = ['requirements','architect','backend','security','qa','devops','critic','judge'];
 let editingGatewayId = null;
 let gatewayProfiles = loadStoredGateways();
 
@@ -89,14 +84,27 @@ function runtimeMessage(agentId, name, role, content, tagText = 'خروجی زن
 
 let activeRunId = null;
 let approvalRunId = null;
+let isStartingRun = false;
 
 function handleCouncilEvent(event) {
   if (!event || !event.type) return;
   const agent = agents.find(item => item.id === event.agentId);
   if (event.type === 'run_started') {
     activeRunId = event.runId;
+    isStartingRun = false;
+    for (const item of agents) { item.status = 'آماده'; item.statusCls = ''; item.active = false; }
+    renderAgents();
+    selectedHistoryRunId = event.runId;
+    messages.length = 0;
+    messageTotal = 0;
+    runtimeMessage('pm', 'درخواست کاربر', 'Council Task', event.prompt || 'درخواست جدید', 'درخواست', 'reply');
+    document.querySelector('.verdict-status').textContent = 'در حال بررسی';
+    document.querySelector('.decision-name').textContent = 'منتظر حکم قاضی';
+    document.querySelector('.confidence strong').textContent = '۰٪';
+    document.querySelector('.confidence-track span').style.width = '0%';
     document.querySelector('.live-indicator').textContent = 'جلسه زنده';
     document.querySelector('.session-id strong').textContent = event.runId.slice(0, 8);
+    const typing = document.getElementById('typingRow'); if (typing) typing.style.display = 'flex';
     showToast('جلسه چندایجنتی شروع شد.');
     return;
   }
@@ -115,25 +123,36 @@ function handleCouncilEvent(event) {
     return;
   }
   if (event.type === 'critic_started') {
+    const critic = agents.find(item => item.id === 'critic'); if (critic) { critic.status = 'در حال نقد'; critic.statusCls = 'active-status'; critic.active = true; renderAgents(); }
     runtimeMessage('critic', 'منتقد مخالف', 'Cross-Critique', 'در حال مقایسه نظرها و جست‌وجوی تناقض‌ها…', 'نقد متقابل', 'critical');
     return;
   }
   if (event.type === 'critic_completed') {
+    const critic = agents.find(item => item.id === 'critic'); if (critic) { critic.status = 'تکمیل شد'; critic.statusCls = 'done-status'; critic.active = false; renderAgents(); }
     runtimeMessage('critic', event.agentName, event.role, event.content, 'نقد متقابل', 'critical');
     return;
   }
   if (event.type === 'critic_failed') {
+    const critic = agents.find(item => item.id === 'critic'); if (critic) { critic.status = 'خطا'; critic.statusCls = ''; critic.active = false; renderAgents(); }
     runtimeMessage('critic', 'منتقد مخالف', 'Cross-Critique', event.error || 'نقد متقابل ناموفق بود.', 'خطای نقد', 'critical');
     return;
   }
   if (event.type === 'judge_started') {
+    const judgeAgent = agents.find(item => item.id === 'judge'); if (judgeAgent) { judgeAgent.status = 'در حال داوری'; judgeAgent.statusCls = 'active-status'; judgeAgent.active = true; renderAgents(); }
     runtimeMessage('judge', 'قاضی نهایی', 'Final Judge', 'در حال ارزیابی شواهد، اختلاف‌ها و ریسک‌ها…', 'قضاوت', '');
     return;
   }
   if (event.type === 'judge_result') {
+    const judgeAgent = agents.find(item => item.id === 'judge'); if (judgeAgent) { judgeAgent.status = 'حکم صادر شد'; judgeAgent.statusCls = 'done-status'; judgeAgent.active = false; renderAgents(); }
     const judge = event.judge || {};
     approvalRunId = event.approvalRequired ? event.runId : null;
     document.querySelector('.verdict-status').textContent = judge.decision || 'نامشخص';
+    document.querySelector('.confidence-track span').style.width = `${Math.round((judge.confidence || 0) * 100)}%`;
+    const reasonsList = document.querySelector('.verdict-section:not(.risk-section) ul');
+    const risksList = document.querySelector('.risk-section ul');
+    if (reasonsList) reasonsList.innerHTML = (judge.reasons || []).map(item => `<li>${escapeHtml(item)}</li>`).join('') || '<li>دلیلی ثبت نشد.</li>';
+    if (risksList) risksList.innerHTML = [...(judge.conditions || []), ...(judge.risks || []).map(item => typeof item === 'string' ? item : `${item.severity || 'ریسک'}: ${item.risk || JSON.stringify(item)}`)].map(item => `<li>${escapeHtml(item)}</li>`).join('') || '<li>ریسکی ثبت نشد.</li>';
+    document.querySelector('.next-action strong').textContent = judge.next_action || 'بررسی خروجی شورا';
     document.querySelector('.decision-name').textContent = judge.selected_option || 'نیازمند بررسی بیشتر';
     document.querySelector('.confidence strong').textContent = String(Math.round((judge.confidence || 0) * 100)) + '٪';
     const summary = [
@@ -153,25 +172,139 @@ function handleCouncilEvent(event) {
   if (event.type === 'human_approval_recorded') {
     runtimeMessage('pm', 'مالک پروژه', 'Human Approval', event.approved ? 'تصمیم انسانی ثبت شد؛ این ثبت به‌تنهایی هیچ کد یا عملیات Git را اجرا نمی‌کند.' : 'رد تصمیم انسانی ثبت شد.', 'ثبت تأیید', event.approved ? 'reply' : 'critical');
     approvalRunId = null;
+    refreshCouncilHistory(event.runId);
     document.getElementById('approveBtn').disabled = true;
     document.getElementById('rejectBtn').disabled = true;
     return;
   }
   if (event.type === 'run_completed') {
     activeRunId = null;
+    isStartingRun = false;
+    document.querySelector('.live-indicator').textContent = 'جلسه ذخیره‌شده';
+    const typing = document.getElementById('typingRow'); if (typing) typing.style.display = 'none';
+    refreshCouncilHistory(event.runId);
     showToast(event.status === 'HUMAN_APPROVAL_REQUIRED' ? 'جلسه تمام شد؛ تصمیم انسانی لازم است.' : 'جلسه تمام شد؛ حکم برای بررسی آماده است.');
     return;
   }
   if (event.type === 'run_cancelled') {
     activeRunId = null;
+    isStartingRun = false;
+    for (const item of agents) { if (item.active) { item.active = false; item.status = 'متوقف شد'; item.statusCls = ''; } }
+    renderAgents();
+    document.querySelector('.live-indicator').textContent = 'جلسه لغوشده';
+    const typing = document.getElementById('typingRow'); if (typing) typing.style.display = 'none';
     runtimeMessage('pm', 'پرشین', 'Orchestrator', 'اجرای جلسه لغو شد.', 'لغو شد', 'critical');
+    refreshCouncilHistory(event.runId);
     return;
   }
   if (event.type === 'run_failed') {
     activeRunId = null;
+    isStartingRun = false;
+    for (const item of agents) { if (item.active) { item.active = false; item.status = 'متوقف شد'; item.statusCls = ''; } }
+    renderAgents();
+    document.querySelector('.live-indicator').textContent = 'خطای جلسه';
+    const typing = document.getElementById('typingRow'); if (typing) typing.style.display = 'none';
     runtimeMessage('pm', 'پرشین', 'Orchestrator', event.error || 'جلسه ناموفق بود.', 'خطای جلسه', 'critical');
+    refreshCouncilHistory(event.runId);
     showToast('اجرای جلسه با خطا متوقف شد.');
   }
+}
+
+
+function readAgentModelSettings() {
+  const settings = {};
+  for (const id of AGENT_MODEL_IDS) {
+    const value = document.getElementById('model-' + id)?.value.trim();
+    if (value) settings[id] = value;
+  }
+  try { localStorage.setItem('council-agent-models', JSON.stringify(settings)); } catch {}
+  return settings;
+}
+function loadAgentModelSettings() {
+  let settings = {};
+  try { settings = JSON.parse(localStorage.getItem('council-agent-models') || '{}'); } catch {}
+  for (const id of AGENT_MODEL_IDS) {
+    const input = document.getElementById('model-' + id);
+    if (input && typeof settings[id] === 'string') input.value = settings[id];
+  }
+}
+async function loadCouncilModelCatalog() {
+  const button = document.getElementById('refreshModelsBtn');
+  if (!window.councilCompanion?.listCouncilModels) { showToast('کاتالوگ مدل فقط در نسخه دسکتاپ در دسترس است.'); return; }
+  if (button) { button.disabled = true; button.textContent = 'در حال دریافت…'; }
+  try {
+    const result = await window.councilCompanion.listCouncilModels();
+    modelCatalog = Array.isArray(result?.models) ? result.models : [];
+    const datalist = document.getElementById('modelCatalog');
+    if (datalist) datalist.innerHTML = modelCatalog.map(model => `<option value="${escapeHtml(model)}"></option>`).join('');
+    showToast(modelCatalog.length ? `کاتالوگ ${modelCatalog.length} مدل دریافت شد.` : 'مدلی در کاتالوگ OpenCode پیدا نشد.');
+  } catch (error) { showToast('دریافت مدل‌ها ناموفق بود: ' + (error.message || 'خطای نامشخص')); }
+  finally { if (button) { button.disabled = false; button.textContent = 'به‌روزرسانی مدل‌ها'; } }
+}
+function historyLabel(session) {
+  const date = session.startedAt ? new Date(session.startedAt).toLocaleString('fa-IR') : 'جلسه';
+  return `${date} · ${String(session.status || 'نامشخص')}`;
+}
+function renderHistoryOptions(preferredRunId) {
+  const select = document.getElementById('historySelect');
+  if (!select) return;
+  const current = preferredRunId || select.value || selectedHistoryRunId;
+  select.innerHTML = '<option value="">انتخاب جلسه ذخیره‌شده</option>' + councilHistory.map(session => `<option value="${escapeHtml(session.runId)}">${escapeHtml(historyLabel(session))}</option>`).join('');
+  if (current && councilHistory.some(session => session.runId === current)) select.value = current;
+}
+async function refreshCouncilHistory(preferredRunId) {
+  if (!window.councilCompanion?.getCouncilHistory) return;
+  try { councilHistory = await window.councilCompanion.getCouncilHistory(); renderHistoryOptions(preferredRunId); }
+  catch (error) { console.warn('Council history could not be loaded.', error); }
+}
+function restoreCouncilSession(runId) {
+  const session = councilHistory.find(item => item.runId === runId);
+  if (!session) return;
+  selectedHistoryRunId = runId;
+  messages.length = 0;
+  messageTotal = 0;
+  approvalRunId = null;
+  for (const agent of agents) { agent.status = 'آماده'; agent.statusCls = ''; agent.active = false; }
+  const events = Array.isArray(session.events) ? session.events : [];
+  const approval = events.find(event => event.type === 'human_approval_recorded');
+  for (const event of events) {
+    if (event.type === 'run_started') runtimeMessage('pm', 'درخواست کاربر', 'Council Task', event.prompt || '', 'درخواست', 'reply');
+    if (event.type === 'agent_started') { const agent = agents.find(item => item.id === event.agentId); if (agent) { agent.status = 'در حال اجرا'; agent.statusCls = 'active-status'; agent.active = true; } }
+    if (event.type === 'agent_completed') { const agent = agents.find(item => item.id === event.agentId); if (agent) { agent.status = 'تکمیل شد'; agent.statusCls = 'done-status'; agent.active = false; } runtimeMessage(event.agentId, event.agentName, event.role, event.content, 'نظر مستقل', 'reply'); }
+    if (event.type === 'agent_failed') { const agent = agents.find(item => item.id === event.agentId); if (agent) { agent.status = 'خطا'; agent.statusCls = ''; agent.active = false; } runtimeMessage(event.agentId, event.agentName, event.role, event.error, 'خطای اجرا', 'critical'); }
+    if (event.type === 'critic_started') { const critic = agents.find(item => item.id === 'critic'); if (critic) { critic.status = 'در حال نقد'; critic.statusCls = 'active-status'; critic.active = true; } }
+    if (event.type === 'critic_completed') { const critic = agents.find(item => item.id === 'critic'); if (critic) { critic.status = 'تکمیل شد'; critic.statusCls = 'done-status'; critic.active = false; } runtimeMessage('critic', event.agentName, event.role, event.content, 'نقد متقابل', 'critical'); }
+    if (event.type === 'critic_failed') { const critic = agents.find(item => item.id === 'critic'); if (critic) { critic.status = 'خطا'; critic.statusCls = ''; critic.active = false; } runtimeMessage('critic', 'منتقد مخالف', 'Cross-Critique', event.error, 'خطای نقد', 'critical'); }
+    if (event.type === 'judge_started') { const judgeAgent = agents.find(item => item.id === 'judge'); if (judgeAgent) { judgeAgent.status = 'در حال داوری'; judgeAgent.statusCls = 'active-status'; judgeAgent.active = true; } }
+    if (event.type === 'judge_result') {
+      const judgeAgent = agents.find(item => item.id === 'judge'); if (judgeAgent) { judgeAgent.status = 'حکم صادر شد'; judgeAgent.statusCls = 'done-status'; judgeAgent.active = false; }
+      const judge = event.judge || {};
+      approvalRunId = event.approvalRequired && !approval ? runId : null;
+      document.querySelector('.verdict-status').textContent = judge.decision || 'نامشخص';
+      document.querySelector('.decision-name').textContent = judge.selected_option || 'نیازمند بررسی بیشتر';
+      document.querySelector('.confidence strong').textContent = toPersianDigits(Math.round((judge.confidence || 0) * 100)) + '٪';
+      document.querySelector('.confidence-track span').style.width = Math.round((judge.confidence || 0) * 100) + '%';
+      document.querySelector('.next-action strong').textContent = judge.next_action || 'بررسی خروجی شورا';
+      const reasonList = document.querySelector('.verdict-section:not(.risk-section) ul');
+      const riskList = document.querySelector('.risk-section ul');
+      if (reasonList) reasonList.innerHTML = (judge.reasons || []).map(item => `<li>${escapeHtml(item)}</li>`).join('') || '<li>دلیلی ثبت نشد.</li>';
+      if (riskList) riskList.innerHTML = [...(judge.conditions || []), ...(judge.risks || []).map(item => typeof item === 'string' ? item : item.risk || '')].map(item => `<li>${escapeHtml(item)}</li>`).join('') || '<li>ریسکی ثبت نشد.</li>';
+      const summary = ['تصمیم: ' + judge.decision, 'دلایل: ' + (judge.reasons || []).join('؛ '), 'شرایط: ' + (judge.conditions || []).join('؛ '), 'ریسک‌ها: ' + (judge.risks || []).map(item => typeof item === 'string' ? item : item.risk).join('؛ '), 'گام بعد: ' + (judge.next_action || '—')].join('\\n');
+      runtimeMessage('judge', 'قاضی نهایی', 'Final Judge', summary, 'حکم نهایی', event.approvalRequired ? 'critical' : 'reply');
+      document.getElementById('approveBtn').disabled = !approvalRunId;
+      document.getElementById('rejectBtn').disabled = !approvalRunId;
+    }
+    if (event.type === 'human_approval_recorded') runtimeMessage('pm', 'مالک پروژه', 'Human Approval', event.approved ? 'تأیید انسانی ثبت شد.' : 'رد انسانی ثبت شد.', 'تصمیم انسانی', event.approved ? 'reply' : 'critical');
+    if (event.type === 'run_failed') runtimeMessage('pm', 'پرشین', 'Orchestrator', event.error, 'خطای جلسه', 'critical');
+    if (event.type === 'run_cancelled') runtimeMessage('pm', 'پرشین', 'Orchestrator', 'جلسه لغو شد.', 'لغو شد', 'critical');
+  }
+  renderAgents();
+  renderMessages();
+  document.getElementById('messageCount').textContent = toPersianDigits(messageTotal);
+  document.querySelector('.session-id strong').textContent = runId.slice(0, 8);
+  activeRunId = null;
+  document.getElementById('typingRow').style.display = 'none';
+  document.querySelector('.live-indicator').textContent = session.status === 'INTERRUPTED' ? 'جلسه ناتمام' : 'جلسه ذخیره‌شده';
 }
 
 async function askOpenCode(prompt) {
@@ -179,15 +312,18 @@ async function askOpenCode(prompt) {
     showToast('برای اجرای شورای واقعی، نسخه دسکتاپ Council Room را باز کنید.');
     return;
   }
-  if (activeRunId) {
+  if (activeRunId || isStartingRun) {
     showToast('یک جلسه در حال اجرا است. ابتدا آن را لغو کنید.');
     return;
   }
   try {
-    const result = await window.councilCompanion.startCouncilRun(prompt);
-    activeRunId = result.runId;
+    isStartingRun = true;
+    const result = await window.councilCompanion.startCouncilRun(prompt, { model: document.getElementById('sessionModel')?.value.trim() || undefined, agentModels: readAgentModelSettings() });
+    isStartingRun = false;
+    selectedHistoryRunId = result.runId;
     showToast('درخواست به ایجنت‌های مستقل ارسال شد.');
   } catch (error) {
+    isStartingRun = false;
     runtimeMessage('pm', 'پرشین', 'Orchestrator', error.message || 'شروع جلسه ناموفق بود.', 'خطای شروع', 'critical');
   }
 }
@@ -207,8 +343,8 @@ async function recordHumanApproval(approved) {
 function addMessage() {
   const value = messageInput.value.trim();
   if (!value) { showToast('اول یک پیام یا دستور برای اتاق بنویسید.'); messageInput.focus(); return; }
-  messages.unshift({ id: Date.now(), agent: 'pm', name: 'شما · مالک پروژه', role: 'دستور به پرشین', initial: 'ح', cls: 'judge-avatar', time: 'نمونه', body: escapeHtml(value), tags: [{ text: 'دستور جدید', type: 'reply' }] });
-  agentFilter.value = 'all'; currentView = 'all'; document.querySelectorAll('.view-toggle').forEach(button => button.classList.toggle('active', button.dataset.view === 'all')); renderMessages(); messageInput.value = ''; messageInput.style.height = 'auto'; messageTotal += 1; document.getElementById('messageCount').textContent = toPersianDigits(messageTotal); showToast('دستور شما به اتاق مشورت ارسال شد.');
+  messageInput.value = ''; messageInput.style.height = 'auto';
+  agentFilter.value = 'all'; currentView = 'all'; document.querySelectorAll('.view-toggle').forEach(button => button.classList.toggle('active', button.dataset.view === 'all'));
   askOpenCode(value).catch(error => showToast(`خطای اجرای OpenCode: ${error.message || 'unknown_error'}`));
 }
 function gatewayStatus(profile) {
@@ -308,9 +444,8 @@ messageInput.addEventListener('input', () => { messageInput.style.height = 'auto
 document.getElementById('pauseBtn').addEventListener('click', async () => { if (!activeRunId) { showToast('جلسه فعالی برای لغو وجود ندارد.'); return; } const result = await window.councilCompanion?.cancelCouncilRun?.(activeRunId); showToast(result?.ok ? 'درخواست لغو برای همه ایجنت‌ها ارسال شد.' : 'لغو جلسه ممکن نشد.'); });
 document.getElementById('approveBtn').addEventListener('click', () => recordHumanApproval(true));
 document.getElementById('rejectBtn').addEventListener('click', () => recordHumanApproval(false));
-document.getElementById('approvalBtn').addEventListener('click', () => { showToast('این کارت نمونه است. هیچ تأییدی ثبت نشد.'); });
-document.querySelector('.decline-small').addEventListener('click', () => showToast('این کارت نمونه است. هیچ درخواستی رد یا تغییر داده نشد.'));
-document.getElementById('detailsBtn').addEventListener('click', () => showToast('این بخش فقط به سند نمونه اشاره می‌کند؛ حکم زنده‌ای برای نمایش وجود ندارد.'));
+
+document.getElementById('detailsBtn').addEventListener('click', () => { const item = messages.find(message => message.agent === 'judge'); const node = item && timeline.querySelector(`[data-id="${item.id}"]`); if (node) node.scrollIntoView({ behavior: 'smooth', block: 'center' }); else showToast('هنوز حکم قاضی در این جلسه ثبت نشده است.'); });
 document.getElementById('addGatewayBtn').addEventListener('click', () => openGatewayForm());
 document.getElementById('cancelGatewayBtn').addEventListener('click', closeGatewayForm);
 document.getElementById('gatewayPreset').addEventListener('change', event => { if (!editingGatewayId || event.target.value === 'custom') applyPreset(event.target.value); });
@@ -319,6 +454,13 @@ document.getElementById('saveGatewayBtn').addEventListener('click', saveGateway)
 document.getElementById('exportGatewayBtn').addEventListener('click', exportGateways);
 
 renderAgents(); renderMessages(); renderGateways(); loadProjectGateways();
+loadAgentModelSettings();
+document.getElementById('refreshModelsBtn')?.addEventListener('click', loadCouncilModelCatalog);
+document.querySelectorAll('[data-agent-model]').forEach(input => input.addEventListener('change', readAgentModelSettings));
+document.getElementById('sessionModel')?.addEventListener('change', () => { try { localStorage.setItem('council-session-model', document.getElementById('sessionModel').value.trim()); } catch {} });
+try { document.getElementById('sessionModel').value = localStorage.getItem('council-session-model') || ''; } catch {}
+document.getElementById('historySelect')?.addEventListener('change', event => restoreCouncilSession(event.target.value));
+refreshCouncilHistory().then(() => { const latest = councilHistory[0]; if (latest) { renderHistoryOptions(latest.runId); restoreCouncilSession(latest.runId); } });
 if (window.councilCompanion?.onCouncilEvent) window.councilCompanion.onCouncilEvent(handleCouncilEvent);
 document.getElementById('messageCount').textContent = toPersianDigits(messageTotal);
 let seconds = 0;

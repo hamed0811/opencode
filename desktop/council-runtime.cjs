@@ -68,6 +68,21 @@ function parseJudgeResult(text) {
   };
 }
 
+function redactPayload(value, depth = 0) {
+  if (depth > 6) return '[TRUNCATED]';
+  if (typeof value === 'string') return redactText(value).slice(0, MAX_AGENT_OUTPUT);
+  if (Array.isArray(value)) return value.slice(0, 100).map(item => redactPayload(item, depth + 1));
+  if (value && typeof value === 'object') {
+    const output = {};
+    for (const [key, item] of Object.entries(value).slice(0, 100)) {
+      if (/^(?:__proto__|prototype|constructor)$/i.test(key)) continue;
+      output[key] = redactPayload(item, depth + 1);
+    }
+    return output;
+  }
+  return value;
+}
+
 function createEventStore(dataRoot) {
   fs.mkdirSync(dataRoot, { recursive: true });
   function fileFor(runId) {
@@ -93,18 +108,22 @@ function createEventStore(dataRoot) {
   return { append, read, list };
 }
 
+function normalizeAgentModels(source = {}) {
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return {};
+  return Object.fromEntries(Object.entries(source).filter(([id, model]) => /^[a-z][a-z0-9_-]{0,31}$/.test(id) && typeof model === 'string' && /^[A-Za-z0-9._-]+\/[A-Za-z0-9._:/#-]+$/.test(model.trim()) && model.length <= 160).map(([id, model]) => [id, model.trim()]));
+}
+
 function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency = 5, agentModels = {} }) {
   if (typeof runAgent !== 'function') throw new Error('run_agent_required');
   const store = createEventStore(dataRoot);
-  const safeAgentModels = Object.fromEntries(Object.entries(agentModels || {}).filter(([id, model]) => /^[a-z][a-z0-9_-]{0,31}$/.test(id) && typeof model === 'string' && model.trim().length > 0 && model.length <= 160).map(([id, model]) => [id, model.trim()]));
+  const safeAgentModels = normalizeAgentModels(agentModels);
   const workerLimit = Number.isInteger(concurrency) ? Math.max(1, Math.min(6, concurrency)) : 5;
   const active = new Map();
   const approvals = new Map();
 
   function publish(runId, type, payload = {}) {
-    const event = { runId, type, at: new Date().toISOString(), ...payload };
-    if (event.content) event.content = redactText(event.content).slice(0, MAX_AGENT_OUTPUT);
-    if (event.prompt) event.prompt = redactText(event.prompt).slice(0, MAX_TASK_LENGTH);
+    const event = redactPayload({ runId, type, at: new Date().toISOString(), ...payload });
+    if (event.prompt) event.prompt = event.prompt.slice(0, MAX_TASK_LENGTH);
     store.append(event);
     try { emit(event); } catch {}
     return event;
@@ -123,6 +142,7 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
 
   async function execute(run) {
     const { runId, prompt, model, controller } = run;
+    const models = { ...safeAgentModels, ...normalizeAgentModels(run.agentModels) };
     try {
       publish(runId, 'run_started', { prompt, status: 'CONSULTING', agents: AGENTS.map(({ id, name, role }) => ({ id, name, role })) });
       const findings = [];
@@ -135,7 +155,7 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
           '- Secret یا مقدار credential را تکرار نکن.\n' +
           '- نتیجه را با نکته‌های قابل بررسی و کوتاه ارائه بده.';
         try {
-          const result = await runAgent(agentPrompt, { model: safeAgentModels[agent.id] || model, signal: controller.signal, agentId: agent.id });
+          const result = await runAgent(agentPrompt, { model: models[agent.id] || model, signal: controller.signal, agentId: agent.id });
           const content = redactText(result?.text || result || '').slice(0, MAX_AGENT_OUTPUT);
           if (!content.trim()) throw new Error('empty_agent_response');
           const finding = { agentId: agent.id, agentName: agent.name, role: agent.role, content };
@@ -158,7 +178,7 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
       let critique = '';
       try {
         const result = await runAgent(CRITIC_SYSTEM + '\n\nدرخواست کاربر:\n' + prompt + '\n\nیافته‌های مستقل:\n' + evidence +
-          '\n\nتناقض‌ها و ریسک‌ها را با ارجاع به نام ایجنت مشخص کن.', { model: safeAgentModels.critic || model, signal: controller.signal, agentId: 'critic' });
+          '\n\nتناقض‌ها و ریسک‌ها را با ارجاع به نام ایجنت مشخص کن.', { model: models.critic || model, signal: controller.signal, agentId: 'critic' });
         critique = redactText(result?.text || result || '').slice(0, MAX_AGENT_OUTPUT);
         publish(runId, 'critic_completed', { agentId: 'critic', agentName: 'منتقد مخالف', role: 'Cross-Critique', content: critique });
       } catch (error) {
@@ -171,7 +191,7 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
       const judgeInput = JUDGE_SYSTEM + '\n\nدرخواست:\n' + prompt + '\n\nیافته‌ها:\n' + evidence +
         '\n\nنقد متقابل:\n' + (critique || 'نقد متقابل در دسترس نیست.') +
         '\n\nاگر هر ایجنت شکست خورده، این محدودیت را در ریسک‌ها ثبت کن.';
-      const judgeResponse = await runAgent(judgeInput, { model: safeAgentModels.judge || model, signal: controller.signal, agentId: 'judge' });
+      const judgeResponse = await runAgent(judgeInput, { model: models.judge || model, signal: controller.signal, agentId: 'judge' });
       const judge = parseJudgeResult(judgeResponse?.text || judgeResponse || '');
       const approvalRequired = judge.required_human_approval || ['NEEDS_MORE_INFORMATION','REJECTED','HUMAN_APPROVAL_REQUIRED'].includes(judge.decision);
       run.approvalRequired = approvalRequired;
@@ -190,7 +210,9 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
     if (typeof prompt !== 'string' || !prompt.trim()) throw new Error('prompt_empty');
     if (prompt.length > MAX_TASK_LENGTH) throw new Error('prompt_too_long');
     const runId = randomUUID();
-    const run = { runId, prompt: prompt.trim(), model: typeof options.model === 'string' && options.model.trim() ? options.model.trim() : undefined, controller: new AbortController(), approvalRequired: false };
+    const selectedModel = typeof options.model === 'string' && options.model.trim() ? options.model.trim() : undefined;
+    if (selectedModel && (!/^[A-Za-z0-9._-]+\/[A-Za-z0-9._:/#-]+$/.test(selectedModel) || selectedModel.length > 160)) throw new Error('invalid_model_id');
+    const run = { runId, prompt: prompt.trim(), model: selectedModel, agentModels: normalizeAgentModels(options.agentModels), controller: new AbortController(), approvalRequired: false };
     active.set(runId, run);
     void execute(run);
     return { runId };
@@ -230,7 +252,7 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
     return store.list(limit).map(events => ({
       runId: events[0]?.runId,
       startedAt: events[0]?.at,
-      status: events.at(-1)?.status || events.at(-1)?.type,
+      status: (() => { const terminal = [...events].reverse().find(event => ['run_completed','run_cancelled','run_failed'].includes(event.type)); return terminal ? (terminal.status || terminal.type) : 'INTERRUPTED'; })(),
       events
     })).filter(item => item.runId);
   }
@@ -238,4 +260,4 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
   return { start, cancel, recordApproval, history, readEvents: store.read };
 }
 
-module.exports = { AGENTS, redactText, parseJudgeResult, createEventStore, createCouncilRuntime, MAX_TASK_LENGTH };
+module.exports = { AGENTS, redactText, redactPayload, parseJudgeResult, normalizeAgentModels, createEventStore, createCouncilRuntime, MAX_TASK_LENGTH };

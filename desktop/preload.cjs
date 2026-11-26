@@ -9,7 +9,8 @@ contextBridge.exposeInMainWorld('councilCompanion', {
     prompt,
     model: typeof options.model === 'string' ? options.model : undefined
   }),
-  startCouncilRun: (prompt, options = {}) => ipcRenderer.invoke('council:start', { prompt, model: typeof options.model === 'string' ? options.model : undefined }),
+  startCouncilRun: (prompt, options = {}) => ipcRenderer.invoke('council:start', { prompt, model: typeof options.model === 'string' ? options.model : undefined, agentModels: options.agentModels && typeof options.agentModels === 'object' ? options.agentModels : {} }),
+  listCouncilModels: () => ipcRenderer.invoke('council:models'),
   cancelCouncilRun: runId => ipcRenderer.invoke('council:cancel', runId),
   getCouncilHistory: () => ipcRenderer.invoke('council:history'),
   recordCouncilApproval: (runId, approved, note = '') => ipcRenderer.invoke('council:approval', { runId, approved: approved === true, note: String(note || '') }),

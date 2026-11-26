@@ -33,9 +33,12 @@ npm run desktop:installer
 - Tool discovery checks executable names and version output. It does not prove that a tool can read files, run tests, or act as an agent.
 - Project configuration is read by the main process from the bundled config directory.
 
-## Current product limits
-- The desktop companion sends one prompt to OpenCode.
-- It does not run a multi-agent workflow.
-- It does not provide a real judge, approval engine, Gateway connection, or GitHub PR workflow.
-- Static dashboard content is sample data and is labelled as such.
+## Current product behavior
+- The desktop app runs six independent consultation roles, then a Critic and a Final Judge.
+- Session events are stored locally and can be replayed from the history selector.
+- The model catalog is loaded from the installed OpenCode CLI with `opencode models`.
+- A session model and per-role model overrides can be selected in the desktop settings.
+- Human approval records a decision only. It does not execute code or perform Git operations.
+- Agent-driven code changes remain disabled until a real OS-level sandbox and controlled tool policy are implemented.
+- Workspace validation is not a security sandbox. OpenCode still runs with the current Windows user's permissions.
 - Windows execution and installer behavior must be verified on a real Windows machine before release.
