@@ -4,7 +4,7 @@ on:
   push:
     branches: [agent-runtime-foundation]
   pull_request:
-    branches: [agent-runtime-foundation]
+    branches: [main]
 
 jobs:
   test:
