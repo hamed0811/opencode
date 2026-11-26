@@ -1,10 +1,6 @@
 name: Validate
 
 on:
-  push:
-    branches:
-      - main
-      - "fix/**"
   pull_request:
     branches:
       - main
