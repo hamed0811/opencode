@@ -73,14 +73,18 @@ function runOpenCodePrompt(prompt, options = {}) {
     : ['run', ...(agent ? ['--agent', agent] : []), ...(options.model ? ['--model', String(options.model)] : []), text];
 
   return new Promise((resolve, reject) => {
+    let abortHandler;
     const child = execFile(executable, args, {
       cwd,
       env,
       windowsHide: true,
       timeout: TIMEOUT_MS,
-      maxBuffer: 2 * 1024 * 1024,
-      ...(options.signal ? { signal: options.signal } : {})
+      maxBuffer: 2 * 1024 * 1024
     }, (error, stdout, stderr) => {
+      if (options.signal && abortHandler) options.signal.removeEventListener('abort', abortHandler);
+      if (error?.killed && process.platform === 'win32' && child.pid) {
+        execFile('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, () => {});
+      }
       const output = String(stdout || '').trim();
       const diagnostic = String(stderr || '').trim();
       if (error) {
@@ -95,6 +99,16 @@ function runOpenCodePrompt(prompt, options = {}) {
         cwd
       });
     });
+    if (options.signal) {
+      abortHandler = () => {
+        if (process.platform === 'win32' && child.pid) {
+          execFile('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, () => {});
+        } else if (child.pid) child.kill();
+      };
+      if (options.signal.aborted) abortHandler();
+      else options.signal.addEventListener('abort', abortHandler, { once: true });
+      child.once('spawn', () => { if (options.signal.aborted) abortHandler(); });
+    }
   });
 }
 
