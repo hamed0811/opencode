@@ -93,7 +93,7 @@ async function runMotionStudioAgent(options) {
     const response = await options.runModel(prompt);
     const plan = parseMotionPlan(response.text, allowedTools);
     if (plan.message) message = plan.message;
-    if (!plan.actions.length || plan.done) break;
+    if (!plan.actions.length) break;
 
     for (const action of plan.actions) {
       if (executed.length >= MAX_ACTIONS) {
@@ -116,6 +116,7 @@ async function runMotionStudioAgent(options) {
         return { ok: true, cancelled: true, message: 'عملیات با درخواست کاربر لغو شد.', rounds, actions: executed };
       }
     }
+    if (plan.done) break;
   }
 
   if (rounds === MAX_ROUNDS && executed.length >= MAX_ACTIONS) {
