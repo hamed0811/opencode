@@ -462,6 +462,9 @@ const motionToolDescription = document.getElementById('motionToolDescription');
 const motionToolSchema = document.getElementById('motionToolSchema');
 const motionToolArgs = document.getElementById('motionToolArgs');
 const motionToolResult = document.getElementById('motionToolResult');
+const motionAgentPrompt = document.getElementById('motionAgentPrompt');
+const motionAgentResult = document.getElementById('motionAgentResult');
+const runMotionAgentBtn = document.getElementById('runMotionAgentBtn');
 const runMotionToolBtn = document.getElementById('runMotionToolBtn');
 let concatTools = [];
 
@@ -478,6 +481,7 @@ function renderConcatTools(tools) {
   motionToolSelect.innerHTML = '<option value="">ابزار را انتخاب کنید</option>' +
     concatTools.map(tool => `<option value="${escapeHtml(tool.name)}">${escapeHtml(tool.name)} — ${tool.access === 'write' ? 'تغییر' : 'خواندن'}</option>`).join('');
   motionStudioWorkspace.hidden = false;
+  runMotionAgentBtn.disabled = false;
   motionStudioStatus.textContent = `اتصال برقرار است؛ ${toPersianDigits(concatTools.length)} ابزار مجاز شناسایی شد.`;
 }
 document.getElementById('motionStudioBtn')?.addEventListener('click', openMotionStudio);
@@ -497,6 +501,22 @@ document.getElementById('connectConcatBtn')?.addEventListener('click', async () 
     motionStudioStatus.textContent = `اتصال برقرار نشد: ${error.message || 'خطای ناشناخته'}`;
     showToast('اتصال Concat ناموفق بود. تنظیم Automation را بررسی کن.');
   } finally { button.disabled = false; }
+});
+runMotionAgentBtn?.addEventListener('click', async () => {
+  const prompt = motionAgentPrompt?.value.trim() || '';
+  if (!prompt) { showToast('درخواست Motion Studio را بنویس.'); return; }
+  runMotionAgentBtn.disabled = true;
+  motionAgentResult.textContent = 'دستیار در حال بررسی درخواست است…';
+  try {
+    const model = document.getElementById('sessionModel')?.value.trim() || undefined;
+    const result = await window.councilCompanion?.runMotionStudioAgent?.(prompt, model);
+    if (!result?.ok) throw new Error('motion_agent_failed');
+    motionAgentResult.textContent = JSON.stringify(result, null, 2);
+    showToast(result.cancelled ? 'عملیات لغو شد.' : 'دستیار Motion Studio کار را پردازش کرد.');
+  } catch (error) {
+    motionAgentResult.textContent = error.message || 'motion_agent_failed';
+    showToast('اجرای دستیار Motion Studio ناموفق بود.');
+  } finally { runMotionAgentBtn.disabled = false; }
 });
 motionToolSelect?.addEventListener('change', () => {
   const tool = concatTools.find(item => item.name === motionToolSelect.value);
@@ -526,6 +546,7 @@ runMotionToolBtn?.addEventListener('click', async () => {
 window.councilCompanion?.onConcatExit?.(() => {
   motionStudioStatus.textContent = 'فرایند Concat بسته شد. برای اتصال دوباره، دکمه اتصال را بزن.';
   motionStudioWorkspace.hidden = true;
+  runMotionAgentBtn.disabled = true;
   concatTools = [];
 });
 window.councilCompanion?.onConcatNotification?.(message => {
@@ -548,6 +569,7 @@ document.getElementById('disconnectConcatBtn')?.addEventListener('click', async 
   motionStudioWorkspace.hidden = true;
   motionToolSelect.innerHTML = '<option value="">ابزار را انتخاب کنید</option>';
   motionStudioStatus.textContent = 'اتصال قطع شد.';
+  runMotionAgentBtn.disabled = true;
   motionToolResult.textContent = 'هنوز دستوری اجرا نشده است.';
 });
 
