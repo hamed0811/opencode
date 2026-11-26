@@ -55,8 +55,9 @@ async function detectLocalTools() {
     for (const command of candidate.commands) {
       const probe = process.platform === 'win32' ? await runCommand('where.exe', [command]) : await runCommand('which', [command]);
       if (probe.ok) {
-        const version = await runCommand(command, ['--version']);
-        found = { command, path: probe.output, version: version.ok ? version.output : 'unknown' };
+        const resolvedCommand = probe.output;
+        const version = await runCommand(resolvedCommand, ['--version']);
+        found = { command, path: resolvedCommand, version: version.ok ? version.output : 'unknown' };
         break;
       }
     }
