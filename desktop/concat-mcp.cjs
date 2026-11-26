@@ -51,24 +51,34 @@ function resolveConcatCommand(env = process.env, platform = process.platform) {
   throw new Error('concat_not_found');
 }
 
-function buildConcatEnv(source = process.env) {
+function buildConcatEnv(source = process.env, command = '', platform = process.platform) {
   const allowed = [
-    'PATH', 'PATHEXT', 'COMSPEC', 'SYSTEMROOT', 'WINDIR', 'SYSTEMDRIVE',
-    'HOMEDRIVE', 'HOMEPATH', 'USERPROFILE', 'HOME', 'APPDATA',
-    'LOCALAPPDATA', 'PROGRAMDATA', 'PROGRAMFILES', 'TEMP', 'TMP', 'OS'
+    'SYSTEMROOT', 'WINDIR', 'SYSTEMDRIVE', 'HOMEDRIVE', 'HOMEPATH',
+    'USERPROFILE', 'HOME', 'APPDATA', 'LOCALAPPDATA', 'PROGRAMDATA',
+    'PROGRAMFILES', 'TEMP', 'TMP', 'OS'
   ];
   const env = {};
   for (const key of allowed) if (typeof source[key] === 'string') env[key] = source[key];
+  if (platform === 'win32') {
+    const systemRoot = source.SYSTEMROOT || source.WINDIR || 'C:\\Windows';
+    const concatDir = command ? path.win32.dirname(command) : '';
+    env.PATH = [concatDir, path.win32.join(systemRoot, 'System32'), path.win32.join(systemRoot, 'System32', 'Wbem')]
+      .filter(Boolean).join(';');
+    env.PATHEXT = '.COM;.EXE;.BAT;.CMD';
+    env.COMSPEC = path.win32.join(systemRoot, 'System32', 'cmd.exe');
+  } else if (typeof source.PATH === 'string') {
+    env.PATH = source.PATH;
+  }
   return env;
 }
 
 class ConcatMcpClient extends EventEmitter {
   constructor(options = {}) {
     super();
-    this.command = options.command || resolveConcatCommand(options.env || process.env, options.platform || process.platform);
-    this.env = buildConcatEnv(options.env || process.env);
-    this.spawnProcess = options.spawn || spawn;
     this.platform = options.platform || process.platform;
+    this.command = options.command || resolveConcatCommand(options.env || process.env, this.platform);
+    this.env = buildConcatEnv(options.env || process.env, this.command, this.platform);
+    this.spawnProcess = options.spawn || spawn;
     this.child = null;
     this.lines = null;
     this.nextId = 1;
@@ -98,6 +108,8 @@ class ConcatMcpClient extends EventEmitter {
     this.lines = readline.createInterface({ input: child.stdout, crlfDelay: Infinity });
     this.lines.on('line', line => this._onLine(line));
     child.stderr?.on('data', chunk => this.emit('diagnostic', String(chunk).slice(0, 1000)));
+    child.stdin?.on('error', () => this._failAll(new Error('concat_stdin_error')));
+    child.stdout?.on('error', () => this._failAll(new Error('concat_stdout_error')));
     child.on('error', error => this._failAll(new Error(error.code || 'concat_process_error')));
     child.on('exit', (code, signal) => {
       this.started = false;
@@ -202,6 +214,12 @@ class ConcatMcpClient extends EventEmitter {
     try { message = JSON.parse(line); }
     catch {
       this._failAll(new Error('concat_invalid_jsonrpc_response'));
+      this.close();
+      return;
+    }
+    if (!message || message.jsonrpc !== '2.0') {
+      this._failAll(new Error('concat_invalid_jsonrpc_response'));
+      this.close();
       return;
     }
     if (message && typeof message.method === 'string' && message.id === undefined) {
