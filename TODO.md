@@ -1,15 +1,44 @@
-# TODO — Council Room
+# Council Room — وضعیت واقعی پروژه
 
-- [x] Create RTL command-center shell for the multi-agent council.
-- [x] Show agent roster with role, status, and activity indicators.
-- [x] Show live-style discussion timeline with filters and message metadata.
-- [x] Add disagreement threads and cross-critiques.
-- [x] Add final judge panel with decision, confidence, reasons, risks, and next action.
-- [x] Add human approval request block for sensitive actions.
-- [x] Add project-owner composer to send a new instruction into the room.
-- [x] Add responsive desktop/mobile layouts and accessible focus states.
-- [x] Add sample opencode consultation session from intake to Draft Pull Request.
-- [x] Add OpenAI-oriented Orchestrator configuration and system/role prompts.
-- [ ] Connect the server runtime to OpenAI using a protected secret.
-- [ ] Connect GitHub repository hamed0811/opencode after owner confirmation.
-- [ ] Create real branch, run tests, and open a Draft Pull Request from the server.
+## انجام‌شده در شاخه hardening
+- [x] اجرای Electron با مسیرهای نسبی برای فایل‌های محلی.
+- [x] محدودسازی محیط فرایند OpenCode به allowlist.
+- [x] محدودسازی مسیر کاری به Workspace.
+- [x] محدودسازی بازکردن مسیرها به Workspace.
+- [x] بررسی فایل‌های اجرایی CMD/BAT با PowerShell در ویندوز.
+- [x] حذف ادعای قابلیت ابزارها که فقط از روی نام فایل قابل اثبات نیستند.
+- [x] برچسب‌گذاری داده‌های ثابت داشبورد به‌عنوان نمونه.
+- [x] بارگذاری تنظیمات پروژه از Main Process در حالت دسکتاپ.
+- [x] افزودن تست‌های واحد و CI برای Node.js و Windows.
+- [x] ساخت NSIS installer در CI و انتشار Artifact.
+- [ ] اجرای تست روی Windows واقعی.
+
+## هنوز پیاده‌سازی نشده
+- [x] اسکریپت فقط‌خواندنی بررسی پیش‌نیازهای Windows Sandbox.
+- [ ] انتخاب، پیاده‌سازی و آزمون Sandbox سطح سیستم‌عامل برای محدودکردن دسترسی فایل و شبکه.
+- [x] Orchestrator چندایجنتی برای مشورت و تصمیم‌سازی.
+- [x] اجرای مستقل و موازی ۶ نقش تخصصی از طریق OpenCode محلی.
+- [x] Event Bus زنده از Main Process به رابط دسکتاپ.
+- [x] Event Store پایدار JSONL برای هر جلسه.
+- [x] نقد متقابل و قاضی نهایی با خروجی ساختاریافته.
+- [x] لغو جلسه فعال و ارسال Abort به اجرای OpenCode.
+- [x] ثبت تأیید انسانی با جلوگیری از ثبت تکراری.
+- [ ] اجرای وظایف کدنویسی توسط ایجنت‌ها با مجوز ابزار کنترل‌شده.
+- [x] پشتیبانی از مدل مجزا برای هر نقش از طریق config.
+- [x] رابط انتخاب مدل برای هر ایجنت و خواندن کاتالوگ مدل‌ها.
+- [x] بازیابی جلسه و نمایش تاریخچه ذخیره‌شده در UI.
+- [ ] اتصال واقعی Gateway و مدیریت امن Secretها.
+- [x] انتقال MCP برای Concat با allowlist ابزارها و تأیید native برای عملیات تغییردهنده.
+- [x] دستیار Motion Studio با برنامه‌ریزی JSON، محدودیت سه دور و سقف هشت عملیات.
+- [ ] تست واقعی Motion Studio و بررسی deny شدن تمام ابزارهای OpenCode روی Windows.
+- [ ] اجرای تست MCP و اتصال واقعی به Concat روی Windows.
+- [ ] ساخت Branch و Pull Request از داخل برنامه.
+- [ ] تست End-to-End برای کل مسیر محصول.
+- [x] ارتقای Electron به 45.5.0 و electron-builder به 26.18.1.
+- [x] صفرشدن هشدارهای npm audit با override محدود minimatch 11.0.1؛ بازبینی دوباره پیش از انتشار لازم است.
+
+## محدودیت مهم
+- این نسخه Orchestrator واقعی مشورت چندایجنتی است؛ اجرای تغییرات کد هنوز قفل است.
+- اجرای تغییرات فقط پس از پیاده‌سازی و آزمون Sandbox سطح سیستم‌عامل فعال می‌شود.
+- مدل‌ها از دستور `opencode models` خوانده می‌شوند. اعتبار هر مدل تابع پیکربندی OpenCode کاربر است.
+- داده‌های نمونه از جریان گفت‌وگو و حکم حذف شده‌اند.

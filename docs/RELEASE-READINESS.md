@@ -1,0 +1,91 @@
+# Release Readiness
+
+This checklist defines the minimum evidence required before Council Room can be called complete or receive a stable release.
+
+## Current release decision
+
+**NO-GO — preview only.**
+
+The repository is public. Public visibility does not mean the project has an open-source license. The package currently declares `UNLICENSED`. The owner must select and approve a license before publishing a formal open-source release.
+
+## Required gates
+
+### 1. Product behavior
+- [x] Parallel consultation roles.
+- [x] Independent Critic and structured Final Judge.
+- [x] Persistent session history and replay.
+- [x] Cancellation and human decision records.
+- [ ] Full end-to-end test with a real OpenCode installation.
+- [ ] Verify model selection and provider failures on a real Windows device.
+- [ ] Verify clean install, upgrade, uninstall, and data retention.
+
+### 2. Security
+- [x] Renderer Node.js integration disabled.
+- [x] IPC requests restricted to the application window.
+- [x] Child process environment uses an explicit allowlist.
+- [x] Secret-like values are redacted before event persistence.
+- [x] Workspace path validation.
+- [ ] A tested OS-level sandbox for any future code execution.
+- [ ] Deny-by-default network isolation enforced by the OS.
+- [ ] Resource limits, process restrictions, and timeout behavior tested.
+- [ ] Threat model and security review signed off.
+
+Workspace path validation is not a sandbox. Until the sandbox gate passes, agent-driven code execution must remain disabled. The configuration must not claim that sandboxing is active.
+
+### 3. Gateway and secrets
+- [ ] Implement a real provider adapter.
+- [ ] Store credentials in Windows Credential Manager or another reviewed secure store.
+- [ ] Never expose credentials to the renderer, prompts, transcripts, logs, or Git.
+- [ ] Test invalid credentials, provider timeouts, rate limits, and cancellation.
+- [ ] Verify every provider profile against current official API documentation.
+
+### 4. Git workflow
+- [ ] Implement feature-branch creation from the configured base.
+- [ ] Validate branch names and workspace repository identity.
+- [ ] Review diffs before commit.
+- [ ] Create Draft Pull Requests only after explicit human approval.
+- [ ] Never push directly to `main`.
+- [ ] Never merge or force-push automatically.
+- [ ] Test rollback and interrupted operations.
+
+### 5. Motion Studio and Concat
+- [x] Add a bounded Motion Studio AI planner with a strict JSON action contract.
+- [x] Deny all OpenCode tools to the Motion Studio planner.
+- [x] Validate Concat actions in the Electron main process and require native confirmation for writes.
+- [x] Propagate Concat MCP tool errors to Motion Studio and stop dependent actions after a failed step.
+- [ ] Verify OpenCode tool denial and the full Motion Studio workflow on the target Windows device.
+- [x] Pass Concat MCP transport unit tests in CI (mock server).
+- [ ] Verify MCP initialize, tools/list, version detection, and process cleanup on the target Windows device.
+- [x] Install Concat 0.2.12 on the target Windows machine (user confirmed).
+- [x] Verify the Concat executable path and installed version through Windows.
+- [ ] Verify the initial supervised Concat MCP bridge through its documented interface on the real device.
+- [ ] Test project creation, media import, timeline edits, preview, save, export, cancellation, and crash recovery on real Concat.
+- [x] Unit-test Concat process-exit propagation and MCP reconnect with a mock process.
+- [ ] Verify Concat unavailable, process crash, timeout, and user cancellation on the real Windows device.
+- [ ] Keep Concat paths and permissions configurable. Do not hardcode user-specific paths.
+
+### 6. Windows release
+- [x] CI builds an unpacked Windows app.
+- [x] CI builds an NSIS installer.
+- [ ] Test installer on a clean Windows 10/11 device.
+- [ ] Test app launch when OpenCode is missing.
+- [ ] Test app launch when OpenCode is installed but not authenticated.
+- [ ] Test upgrade and uninstall behavior.
+- [ ] Add code signing or document the unsigned installer warning.
+- [ ] Publish SHA-256 checksums for release artifacts.
+- [ ] Verify logs do not contain secrets or private prompts.
+- [x] Upgrade Electron to 45.5.0 and electron-builder to 26.18.1.
+- [x] Run npm audit after the targeted minimatch 11.0.1 override; latest report has zero known vulnerabilities.
+- [ ] Re-run the audit before each release.
+
+### 7. Open-source release
+- [ ] Select a license and confirm it is compatible with all included assets and dependencies.
+- [ ] Replace the `UNLICENSED` package metadata after license approval.
+- [ ] Add the approved LICENSE file.
+- [ ] Add a contribution guide and code of conduct.
+- [ ] Add issue templates and a security reporting policy.
+- [ ] Tag a version only after all required gates pass.
+
+## Release rule
+
+Do not label the application stable or complete while any required security, Windows smoke-test, licensing, or end-to-end gate remains open. A passing CI build is necessary, but it does not prove that the application works correctly on the target laptop.

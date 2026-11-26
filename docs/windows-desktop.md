@@ -1,32 +1,74 @@
-# نسخه دسکتاپ ویندوزی Council Room
+# Windows Desktop
 
-این پروژه اکنون دو حالت دارد: نسخه وب فعلی و نسخه دسکتاپ Electron. نسخه دسکتاپ همان داشبورد را در یک پنجره مستقل ویندوز اجرا می‌کند و از طریق Windows Companion فقط ابزارهای مجاز را شناسایی می‌کند.
+## Requirements
+- Windows 10 or later.
+- Node.js 22 or later.
+- OpenCode CLI installed and available in PATH.
 
-## اجرای توسعه
+## Install and run
+Run these commands in PowerShell from the repository folder:
 
 ```powershell
-npm install
+npm ci
+$env:COUNCIL_WORKSPACE = "F:\\path\\to\\your\\workspace"
 npm run desktop
 ```
 
-## ساخت Installer و نسخه Portable روی ویندوز
+If `COUNCIL_WORKSPACE` is not set, the app uses its private Electron user-data workspace.
 
+## Build
 ```powershell
+npm run check
+npm run desktop:dir
 npm run desktop:installer
 ```
 
-خروجی‌ها در پوشه `dist/` ساخته می‌شوند: یک Installer قابل نصب و یک نسخه Portable.
+## Security boundaries
+- The renderer has no Node.js integration.
+- IPC accepts requests only from the main application window.
+- OpenCode runs only in the configured workspace.
+- The child process receives an explicit environment allowlist. Arbitrary API keys and tokens from the parent process are not inherited.
+- The open-path IPC method only opens existing paths inside the configured workspace.
+- Workspace validation limits the process working directory. It is not an operating-system sandbox. OpenCode still runs with the current Windows user's permissions and may access other files through its own tools. Do not treat this as isolation from untrusted prompts or code.
+- Tool discovery checks executable names and version output. It does not prove that a tool can read files, run tests, or act as an agent.
+- Project configuration is read by the main process from the bundled config directory.
+- The initial Concat MCP bridge starts only the installed Concat executable with `--mcp window`. It does not fall back to headless mode.
+- The bridge passes a restricted environment to Concat. It does not pass arbitrary API keys or custom secret variables.
+- The bridge exposes only an explicit Concat tool allowlist. Mutating tools require a native Electron confirmation that displays the tool name and arguments.
+- Concat MCP access is not a sandbox for agent code. Concat retains its own project-root rules. Council Room does not set `CONCAT_MCP_ROOTS`.
 
-## شناسایی ایجنت‌ها
+## Current product behavior
+- The desktop app runs six independent consultation roles, then a Critic and a Final Judge.
+- Session events are stored locally and can be replayed from the history selector.
+- The model catalog is loaded from the installed OpenCode CLI with `opencode models`.
+- A session model and per-role model overrides can be selected in the desktop settings.
+- Human approval records a decision only. It does not execute code or perform Git operations.
+- Agent-driven code changes remain disabled until a real OS-level sandbox and controlled tool policy are implemented.
+- Motion Studio requires Concat to be open with Settings > Automation > Scripts and apps enabled. The MCP bridge uses `window` mode so it fails instead of silently switching to headless mode.
+- Workspace validation is not a security sandbox. OpenCode still runs with the current Windows user's permissions.
+- Windows execution and installer behavior must be verified on a real Windows machine before release.
 
-Companion فقط وجود executableها و نسخه آن‌ها را بررسی می‌کند؛ محتوای پروژه‌ها، فایل‌های شخصی و Secretها را بدون مجوز نمی‌خواند. موارد اولیه شامل OpenCode، Claude Code، Cursor، Cline، Aider، Gemini CLI، Git، Node.js، Python، Docker و VS Code است.
 
-نتیجه از طریق API محدود `window.councilCompanion.detectLocalTools()` در اختیار رابط قرار می‌گیرد. کلید OpenAI و GitHub نباید در frontend یا فایل نصب قرار گیرند؛ برای اتصال واقعی باید در Secret امن سرور یا Windows Credential Manager ثبت شوند.
+## CI installer artifact
 
-## مدل امنیتی
+The Windows CI job builds the unpacked application and the NSIS installer. It uploads the installer as the `Council-Room-Windows-Installer` workflow artifact for 14 days. The installer still requires a real target-machine smoke test before release.
 
-Electron با `contextIsolation`، بدون `nodeIntegration` و با preload محدود اجرا می‌شود. اجرای کد، تغییر فایل، push و ساخت Pull Request باید از policy و تأیید انسانی عبور کند. Merge و force-push در اختیار Companion نیست.
 
-## وضعیت فعلی
+## Read-only sandbox preflight
 
-پوسته دسکتاپ و API شناسایی آماده است. اتصال زنده به OpenAI، اتصال repository و ساخت Pull Request واقعی باید در مرحله سرور/Connector تکمیل شود؛ داشبورد فعلی سناریوی نمونه را نشان می‌دهد.
+Before choosing a Windows isolation backend, run this read-only check from the repository root in PowerShell:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\check-sandbox-prerequisites.ps1
+```
+
+The script reports the Windows edition, virtualization support, optional Windows features, related services, and firewall profile defaults. It does not enable features or change firewall settings. The report alone does not prove that a secure sandbox is configured.
+
+
+## Motion Studio AI boundary
+
+Motion Studio uses OpenCode as a planner. OpenCode runs its default in-process run server from the private Council Room user-data directory. Its project config is disabled. Pure mode skips external OpenCode plugins. A controlled inline config denies all OpenCode tools. The model can only return a JSON action plan.
+
+The Electron main process validates each action against the Concat MCP tool allowlist. It executes the action through the supervised Concat MCP process. Every mutating action requires a native confirmation dialog that shows the complete arguments. The planner cannot run PowerShell, CMD, shell, or source-file edit tools.
+
+This does not provide the OS-level sandbox needed for agent-driven source-code changes. That feature remains disabled.
