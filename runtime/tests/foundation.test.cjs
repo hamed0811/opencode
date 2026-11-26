@@ -21,3 +21,6 @@ test('connector write operations require approval', async () => {
   await assert.rejects(() => connectors.execute('sample-connector', 'send', {}), /approval_required/);
   assert.equal(await connectors.execute('sample-connector', 'send', {}, { approved: true }), 'sent');
 });
+
+
+test('connector manifests reject duplicate and malformed operations', () => {\n  assert.throws(() => connectors.validateManifest({ id: 'bad', version: '1', capabilities: [], operations: [{ id: 'same', risk: 'read' }, { id: 'same', risk: 'write' }] }), /duplicate_operation_id/);\n  assert.throws(() => connectors.validateManifest({ id: 'bad', version: '1', capabilities: [], operations: [{ id: 'bad operation', risk: 'read' }] }), /invalid_operation/);\n  assert.throws(() => connectors.validateManifest({ id: 'bad', version: '1', capabilities: [1], operations: [] }), /invalid_capability/);\n});\n
