@@ -90,3 +90,37 @@ test('Motion Studio agent rejects oversized user prompts', async () => {
     executeTool: async () => ({})
   }), /motion_prompt_too_long/);
 });
+
+
+test('Motion Studio reports tool errors and stops dependent actions in the same round', async () => {
+  let executed = 0;
+  const result = await runMotionStudioAgent({
+    prompt: 'ایجاد پروژه و سپس فهرست پروژه‌ها',
+    tools,
+    runModel: async () => ({
+      text: '{"actions":[{"tool":"project_create","args":{"name":"Test"}},{"tool":"project_list","args":{}}],"message":"انجام شد","done":true}'
+    }),
+    executeTool: async () => {
+      executed += 1;
+      return { ok: false, error: 'Concat rejected the operation' };
+    }
+  });
+  assert.equal(executed, 1);
+  assert.equal(result.ok, false);
+  assert.equal(result.failedActions, 1);
+  assert.match(result.message, /ناموفق/);
+  assert.equal(result.actions.length, 1);
+});
+
+test('Motion Studio reports a cancelled operation as not successful', async () => {
+  const result = await runMotionStudioAgent({
+    prompt: 'ایجاد پروژه',
+    tools,
+    runModel: async () => ({
+      text: '{"actions":[{"tool":"project_create","args":{"name":"Test"}}],"message":"اجرا","done":true}'
+    }),
+    executeTool: async () => ({ ok: false, cancelled: true })
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.cancelled, true);
+});
