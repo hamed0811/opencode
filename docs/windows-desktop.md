@@ -63,3 +63,12 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\check-sandbox-
 ```
 
 The script reports the Windows edition, virtualization support, optional Windows features, related services, and firewall profile defaults. It does not enable features or change firewall settings. The report alone does not prove that a secure sandbox is configured.
+
+
+## Motion Studio AI boundary
+
+Motion Studio uses OpenCode as a planner. OpenCode runs in standalone mode from the private Council Room user-data directory. Its project config is disabled. A controlled inline config denies all OpenCode tools. The model can only return a JSON action plan.
+
+The Electron main process validates each action against the Concat MCP tool allowlist. It executes the action through the supervised Concat MCP process. Every mutating action requires a native confirmation dialog that shows the complete arguments. The planner cannot run PowerShell, CMD, shell, or source-file edit tools.
+
+This does not provide the OS-level sandbox needed for agent-driven source-code changes. That feature remains disabled.
