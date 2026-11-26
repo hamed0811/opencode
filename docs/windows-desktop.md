@@ -1,56 +1,40 @@
-# نسخه دسکتاپ ویندوزی Council Room
+# Windows Desktop
 
-این پروژه دو حالت دارد: نسخه وب و نسخه دسکتاپ Electron. نسخه دسکتاپ داشبورد را در یک پنجره مستقل اجرا می‌کند.
+## Requirements
+- Windows 10 or later.
+- Node.js 22 or later.
+- OpenCode CLI installed and available in PATH.
 
-## اجرای توسعه در PowerShell
+## Install and run
+Run these commands in PowerShell from the repository folder:
 
 ```powershell
-npm install
-$env:COUNCIL_WORKSPACE = "F:\مسیر\پروژه"
+npm ci
+$env:COUNCIL_WORKSPACE = "F:\\path\\to\\your\\workspace"
 npm run desktop
 ```
 
-اگر `COUNCIL_WORKSPACE` را تنظیم نکنید، برنامه از پوشه جداگانه زیر استفاده می‌کند:
+If `COUNCIL_WORKSPACE` is not set, the app uses its private Electron user-data workspace.
 
-```
-<userData>\workspace
-```
-
-Runner مسیر واقعی پوشه را بررسی می‌کند. اجرای خارج از Workspace رد می‌شود. Renderer نمی‌تواند مقدار `cwd` را انتخاب کند.
-
-## ساخت Installer و نسخه Portable
-
+## Build
 ```powershell
+npm run check
+npm run desktop:dir
 npm run desktop:installer
 ```
 
-خروجی‌ها در پوشه `dist/` ساخته می‌شوند.
+## Security boundaries
+- The renderer has no Node.js integration.
+- IPC accepts requests only from the main application window.
+- OpenCode runs only in the configured workspace.
+- The child process receives an explicit environment allowlist. Arbitrary API keys and tokens from the parent process are not inherited.
+- The open-path IPC method only opens existing paths inside the configured workspace.
+- Tool discovery checks executable names and version output. It does not prove that a tool can read files, run tests, or act as an agent.
+- Project configuration is read by the main process from the bundled config directory.
 
-## شناسایی ابزارها
-
-Companion وجود executableها و نسخه آن‌ها را بررسی می‌کند. این کار به معنی اجرای Agent مستقل نیست. ابزارهای شناسایی‌شده شامل OpenCode، Claude Code، Cursor، Cline، Aider، Gemini CLI، Git، Node.js، Python، Docker و VS Code هستند.
-
-## اجرای OpenCode
-
-در نسخه فعلی، هر پیام کاربر یک درخواست به `opencode run` می‌فرستد. در ویندوز، مسیر CLI با `where.exe` پیدا می‌شود. فایل‌های اجرایی معمولی و shimهای npm مانند `.cmd` از طریق PowerShell فراخوانی می‌شوند.
-
-این قابلیت هنوز Orchestrator چندایجنتی نیست. ایجنت‌های نمایش‌داده‌شده و پیام‌های اولیه در رابط نمونه هستند.
-
-## امنیت Electron
-
-- `contextIsolation` فعال است.
-- `nodeIntegration` خاموش است.
-- `sandbox` فعال است.
-- پنجره‌های جدید و navigation از Renderer مسدود هستند.
-- IPC فقط درخواست‌های پنجره اصلی و frame اصلی را می‌پذیرد.
-- مسیر Workspace در Main Process تعیین می‌شود.
-- مسیر واقعی پوشه بررسی می‌شود تا خروج از Workspace و عبور از symlink رد شود.
-
-## محدودیت‌های فعلی
-
-- Orchestrator و اجرای مستقل چند Agent هنوز پیاده‌سازی نشده‌اند.
-- دکمه‌های تأیید و رد هنوز گردش‌کار واقعی ندارند.
-- دکمه Pause فقط شمارنده زمان را متوقف می‌کند.
-- Gatewayها هنوز اتصال واقعی و ذخیره امن Secret ندارند.
-- اتصال GitHub، ساخت Branch و Draft PR هنوز پیاده‌سازی نشده‌اند.
-- تست خودکار فعلی مرز Workspace را پوشش می‌دهد. تست کامل روی Windows هنوز لازم است.
+## Current product limits
+- The desktop companion sends one prompt to OpenCode.
+- It does not run a multi-agent workflow.
+- It does not provide a real judge, approval engine, Gateway connection, or GitHub PR workflow.
+- Static dashboard content is sample data and is labelled as such.
+- Windows execution and installer behavior must be verified on a real Windows machine before release.
