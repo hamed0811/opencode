@@ -220,7 +220,7 @@ app.whenReady().then(() => {
         'council-motion-studio': {
           mode: 'primary',
           description: 'Plans Concat editing actions. It has no direct tools.',
-          prompt: 'Return a JSON plan only. Do not use tools. The Council Room host executes approved Concat operations.',
+          prompt: 'You have no tools. Do not read or write files. Do not run shell commands. Do not call MCP servers. Return only a JSON plan for the Concat tools listed in the user message. The Council Room host validates every tool and asks the user before each change.',
           tools: { '*': false },
           permission: { '*': 'deny' },
           steps: 4
