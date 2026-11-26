@@ -252,7 +252,7 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
     return store.list(limit).map(events => ({
       runId: events[0]?.runId,
       startedAt: events[0]?.at,
-      status: (() => { const terminal = [...events].reverse().find(event => ['run_completed','run_cancelled','run_failed'].includes(event.type)); return terminal ? (terminal.status || terminal.type) : 'INTERRUPTED'; })(),
+      status: (() => { const terminal = [...events].reverse().find(event => ['run_completed','run_cancelled','run_failed'].includes(event.type)); return terminal ? (terminal.status || terminal.type) : (active.has(events[0]?.runId) ? 'RUNNING' : 'INTERRUPTED'); })(),
       events
     })).filter(item => item.runId);
   }

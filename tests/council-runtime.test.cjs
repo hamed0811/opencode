@@ -130,6 +130,26 @@ test('active run can be cancelled and emits cancellation event', async () => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('history distinguishes a live run from an interrupted run', async () => {
+  const dir = tempDir();
+  const sink = eventSink();
+  const runtime = createCouncilRuntime({ dataRoot: dir, emit: sink.emit, runAgent: (_prompt, options) => new Promise((resolve, reject) => options.signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true })) });
+  const { runId } = runtime.start('Keep this session open.');
+  assert.equal(runtime.history(1)[0].status, 'RUNNING');
+  const done = waitFor(sink, 'run_cancelled', runId);
+  runtime.cancel(runId);
+  await done;
+  assert.equal(runtime.history(1)[0].status, 'CANCELLED');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('runtime rejects malformed model identifiers before starting a process', () => {
+  const dir = tempDir();
+  const runtime = createCouncilRuntime({ dataRoot: dir, runAgent: async () => 'unused' });
+  assert.throws(() => runtime.start('Reject malformed model.', { model: '--help' }), /invalid_model_id/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test('human approval is recorded once and never runs an action', async () => {
   const dir = tempDir();
   const sink = eventSink();

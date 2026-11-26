@@ -302,9 +302,10 @@ function restoreCouncilSession(runId) {
   renderMessages();
   document.getElementById('messageCount').textContent = toPersianDigits(messageTotal);
   document.querySelector('.session-id strong').textContent = runId.slice(0, 8);
-  activeRunId = null;
-  document.getElementById('typingRow').style.display = 'none';
-  document.querySelector('.live-indicator').textContent = session.status === 'INTERRUPTED' ? 'جلسه ناتمام' : 'جلسه ذخیره‌شده';
+  const isRunning = session.status === 'RUNNING';
+  activeRunId = isRunning ? runId : null;
+  document.getElementById('typingRow').style.display = isRunning ? 'flex' : 'none';
+  document.querySelector('.live-indicator').textContent = isRunning ? 'جلسه زنده' : session.status === 'INTERRUPTED' ? 'جلسه ناتمام' : 'جلسه ذخیره‌شده';
 }
 
 async function askOpenCode(prompt) {
