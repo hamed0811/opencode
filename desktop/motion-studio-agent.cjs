@@ -165,6 +165,7 @@ async function runMotionStudioAgent(options) {
   const executed = [];
   let message = '';
   let rounds = 0;
+  let failedActions = 0;
 
   for (let round = 1; round <= MAX_ROUNDS; round++) {
     rounds = round;
@@ -192,7 +193,12 @@ async function runMotionStudioAgent(options) {
         result: serializeBounded(result)
       });
       if (result?.cancelled) {
-        return { ok: true, cancelled: true, message: 'عملیات با درخواست کاربر لغو شد.', rounds, actions: executed };
+        return { ok: false, cancelled: true, message: 'عملیات با درخواست کاربر لغو شد.', rounds, actions: executed };
+      }
+      if (result?.ok === false || result?.isError === true) {
+        failedActions += 1;
+        message = 'یک عملیات ناموفق بود. ادامه عملیات همین مرحله متوقف شد؛ نتیجه خطا برای اصلاح به دستیار داده می‌شود.';
+        break;
       }
     }
     if (plan.done) break;
@@ -201,7 +207,10 @@ async function runMotionStudioAgent(options) {
   if (rounds === MAX_ROUNDS) {
     message = message ? message + ' سقف سه دور این درخواست تکمیل شد؛ برای ادامه، درخواست بعدی را بفرست.' : 'سقف سه دور این درخواست تکمیل شد؛ برای ادامه، درخواست بعدی را بفرست.';
   }
-  return { ok: true, message, rounds, actions: executed };
+  if (failedActions > 0) {
+    message = message ? message + ' حداقل یک عملیات ناموفق باقی مانده است؛ نتیجه را بررسی کن.' : 'حداقل یک عملیات ناموفق باقی مانده است؛ نتیجه را بررسی کن.';
+  }
+  return { ok: failedActions === 0, message, rounds, actions: executed, failedActions };
 }
 
 module.exports = {
