@@ -21,8 +21,9 @@ const messages = [
 ];
 
 const defaultGatewayProfiles = [
-  { id: 'openrouter', name: 'OpenRouter', type: 'openai-compatible', baseUrl: 'https://openrouter.ai/api/v1', model: 'openai/gpt-4o-mini', apiKeyEnv: 'OPENROUTER_API_KEY', enabled: true, keyConfigured: false, note: 'روتر ابری و fallback بین providerها', badge: 'Cloud Router' },
-  { id: 'omniroute', name: 'OmniRoute', type: 'openai-compatible', baseUrl: 'http://localhost:20128/v1', model: 'auto', apiKeyEnv: 'OMNIROUTE_API_KEY', enabled: true, keyConfigured: false, note: 'روتر محلی با انتخاب خودکار مسیر', badge: 'Local Router' }
+  { id: 'opencode-local', name: 'OpenCode محلی', type: 'local-cli', command: 'opencode', model: 'کاتالوگ OpenCode', freeModelsOnly: true, enabled: true, keyConfigured: true, note: 'درگاه پیش‌فرض؛ پاسخ از CLI محلی OpenCode دریافت می‌شود', badge: 'Default / Local' },
+  { id: 'openrouter', name: 'OpenRouter', type: 'openai-compatible', baseUrl: 'https://openrouter.ai/api/v1', model: 'openai/gpt-4o-mini', apiKeyEnv: 'OPENROUTER_API_KEY', enabled: false, keyConfigured: false, note: 'اختیاری؛ فقط پس از ثبت secret و فعال‌سازی کاربر', badge: 'Optional Cloud' },
+  { id: 'omniroute', name: 'OmniRoute', type: 'openai-compatible', baseUrl: 'http://localhost:20128/v1', model: 'auto', apiKeyEnv: 'OMNIROUTE_API_KEY', enabled: false, keyConfigured: false, note: 'اختیاری؛ فقط پس از ثبت secret و فعال‌سازی کاربر', badge: 'Optional Local' }
 ];
 const gatewayPresets = {
   openrouter: defaultGatewayProfiles[0],
@@ -68,13 +69,36 @@ function renderMessages() {
   timeline.innerHTML = filtered.length ? filtered.map(message => `<article class="timeline-item" data-id="${message.id}"><div class="timeline-avatar-wrap"><span class="timeline-avatar agent-avatar ${message.cls}">${message.initial}</span></div><div class="message-content"><div class="message-meta"><strong>${message.name}</strong><span class="role-tag">${message.role}</span><span class="message-time">${message.time}</span></div><p class="message-body">${message.body}</p><div class="message-tags">${message.tags.map(tag => `<span class="msg-tag ${tag.type}">${tag.text}</span>`).join('')}</div></div></article>`).join('') : '<div class="empty-state">برای این فیلتر هنوز پیامی ثبت نشده است.</div>';
 }
 function showToast(text) { toast.textContent = text; toast.classList.add('show'); window.clearTimeout(showToast.timer); showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 3000); }
+async function askOpenCode(prompt) {
+  if (!window.councilCompanion?.isDesktop || typeof window.councilCompanion.runOpenCodePrompt !== 'function') {
+    showToast('برای پاسخ واقعی OpenCode، نسخه دسکتاپ و OpenCode Companion را اجرا کنید.');
+    return;
+  }
+  showToast('پرشین در حال دریافت پاسخ از OpenCode محلی است…');
+  const response = await window.councilCompanion.runOpenCodePrompt(prompt);
+  if (!response?.ok) {
+    const errorText = response?.error || 'opencode_unavailable';
+    messages.unshift({ id: Date.now() + 1, agent: 'pm', name: 'پرشین', role: 'OpenCode محلی', initial: 'پ', cls: 'judge-avatar', time: 'همین الان', body: `وضعیت اتصال OpenCode: <span class="highlight">${escapeHtml(errorText)}</span>. OpenCode را نصب و در PATH قرار دهید، سپس دوباره تلاش کنید.`, tags: [{ text: 'اتصال ناموفق', type: 'critical' }] });
+    renderMessages();
+    showToast(`پاسخ OpenCode دریافت نشد: ${errorText}`);
+    return;
+  }
+  const answer = escapeHtml(response.result?.text || 'پاسخ خالی بود.').replace(/\r?\n/g, '<br>');
+  messages.unshift({ id: Date.now() + 1, agent: 'pm', name: 'پرشین', role: `OpenCode محلی · ${escapeHtml(response.result?.model || 'catalog')}`, initial: 'پ', cls: 'judge-avatar', time: 'همین الان', body: answer, tags: [{ text: 'پاسخ واقعی OpenCode', type: '' }] });
+  messageTotal += 1;
+  document.getElementById('messageCount').textContent = toPersianDigits(messageTotal);
+  renderMessages();
+  showToast('پاسخ OpenCode در اتاق ثبت شد.');
+}
 function addMessage() {
   const value = messageInput.value.trim();
   if (!value) { showToast('اول یک پیام یا دستور برای اتاق بنویسید.'); messageInput.focus(); return; }
   messages.unshift({ id: Date.now(), agent: 'pm', name: 'شما · مالک پروژه', role: 'دستور به پرشین', initial: 'ح', cls: 'judge-avatar', time: 'همین الان', body: escapeHtml(value), tags: [{ text: 'دستور جدید', type: 'reply' }] });
   agentFilter.value = 'all'; currentView = 'all'; document.querySelectorAll('.view-toggle').forEach(button => button.classList.toggle('active', button.dataset.view === 'all')); renderMessages(); messageInput.value = ''; messageInput.style.height = 'auto'; messageTotal += 1; document.getElementById('messageCount').textContent = toPersianDigits(messageTotal); showToast('دستور شما به اتاق مشورت ارسال شد.');
+  askOpenCode(value).catch(error => showToast(`خطای اجرای OpenCode: ${error.message || 'unknown_error'}`));
 }
 function gatewayStatus(profile) {
+  if (profile.type === 'local-cli') return { label: profile.enabled ? 'پیش‌فرض' : 'غیرفعال', cls: profile.enabled ? 'gateway-ready' : 'gateway-neutral' };
   if (!profile.baseUrl || !profile.model || !profile.apiKeyEnv) return { label: 'ناقص', cls: 'gateway-warning' };
   if (!profile.keyConfigured) return { label: 'منتظر secret', cls: 'gateway-neutral' };
   return { label: 'آماده', cls: 'gateway-ready' };

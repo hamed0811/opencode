@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, Menu, Tray, shell } = require('electron');
 const path = require('node:path');
 const { execFile } = require('node:child_process');
+const { runOpenCodePrompt } = require('./opencode-runner.cjs');
 
 let mainWindow;
 let tray;
@@ -80,6 +81,13 @@ function createWindow() {
 
 app.whenReady().then(() => {
   ipcMain.handle('companion:detect', detectLocalTools);
+  ipcMain.handle('opencode:run-prompt', async (_event, payload = {}) => {
+    try {
+      return { ok: true, result: await runOpenCodePrompt(payload.prompt, { model: payload.model, cwd: payload.cwd }) };
+    } catch (error) {
+      return { ok: false, error: error.message || 'opencode_failed' };
+    }
+  });
   ipcMain.handle('companion:open-path', (_event, target) => shell.openPath(target));
   createWindow();
   tray = new Tray(path.join(__dirname, 'tray-icon.png'));

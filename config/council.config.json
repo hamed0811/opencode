@@ -7,17 +7,34 @@
     "workspace": "./workspace"
   },
   "llm": {
-    "provider": "openai",
-    "model": "gpt-4.1-mini",
-    "baseUrl": "${OPENAI_API_BASE}",
-    "apiKey": "${OPENAI_API_KEY}",
+    "provider": "opencode-local",
+    "model": null,
+    "modelSelection": "opencode-catalog",
+    "freeModelsOnly": true,
+    "command": "opencode",
+    "runArgs": ["run"],
+    "apiKey": null,
     "temperature": 0.2,
     "structuredOutputs": true,
     "maxOutputTokens": 5000
   },
   "apiGateways": {
-    "default": "openrouter",
+    "default": "opencode-local",
     "profiles": [
+      {
+        "id": "opencode-local",
+        "name": "OpenCode محلی",
+        "type": "local-cli",
+        "category": "Default Agent Runtime",
+        "command": "opencode",
+        "runArgs": ["run"],
+        "modelSource": "OpenCode /models catalog",
+        "freeModelsOnly": true,
+        "enabled": true,
+        "badge": "Default / Local",
+        "notes": "مسیر پیش‌فرض پاسخ‌گویی؛ مدل از کاتالوگ خود OpenCode انتخاب می‌شود و کلید جداگانه در Council Room نمی‌خواهد",
+        "officialSource": "https://opencode.ai/docs/cli/"
+      },
       {
         "id": "openrouter",
         "name": "OpenRouter",
@@ -276,6 +293,24 @@
         "officialSource": "https://docs.nvidia.com/nim/large-language-models/reference/api-reference"
       }
     ]
+  },
+  "optionalProviders": {
+    "enabledByDefault": false,
+    "requiresUserOptIn": true,
+    "secretStorage": "server_secret_or_windows_credential_manager",
+    "allowedSecretEnv": [
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "GEMINI_API_KEY",
+      "MISTRAL_API_KEY",
+      "GROQ_API_KEY",
+      "DEEPSEEK_API_KEY",
+      "XAI_API_KEY",
+      "COHERE_API_KEY",
+      "OPENROUTER_API_KEY",
+      "OMNIROUTE_API_KEY"
+    ],
+    "neverExposeIn": ["browser", "prompt", "transcript", "diff", "git", "pull_request"]
   },
   "orchestrator": {
     "id": "chief-engineer",
