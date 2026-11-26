@@ -51,5 +51,5 @@ test('execution sandbox is explicitly disabled until OS isolation exists', () =>
 
 test('HTML does not contain escaped newline text from accidental source insertion', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  assert.equal(html.includes('\\\\n'), false);
+  assert.equal(html.includes('\\n'), false);
 });
