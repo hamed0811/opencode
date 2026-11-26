@@ -1,14 +1,16 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, Tray, shell, dialog } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { execFile } = require('node:child_process');
 const { runOpenCodePrompt, listOpenCodeModels, buildChildEnv } = require('./opencode-runner.cjs');
 const { createCouncilRuntime } = require('./council-runtime.cjs');
+const { ConcatMcpClient, MUTATING_TOOLS } = require('./concat-mcp.cjs');
 
 let mainWindow;
 let tray;
 let workspaceRoot;
 let councilRuntime;
+let concatClient;
 
 const candidates = [
   { id: 'opencode', name: 'OpenCode', commands: ['opencode'] },
@@ -141,6 +143,43 @@ app.whenReady().then(() => {
     return councilRuntime.recordApproval(payload.runId, payload.approved === true, payload.note || '');
   });
 
+  ipcMain.handle('concat:connect', async event => {
+    assertTrustedSender(event);
+    if (!concatClient) concatClient = new ConcatMcpClient();
+    try { return await concatClient.start(); }
+    catch (error) {
+      concatClient?.close();
+      concatClient = null;
+      throw new Error(error.message || 'concat_connection_failed');
+    }
+  });
+  ipcMain.handle('concat:disconnect', event => {
+    assertTrustedSender(event);
+    concatClient?.close();
+    concatClient = null;
+    return { ok: true };
+  });
+  ipcMain.handle('concat:call', async (event, payload = {}) => {
+    assertTrustedSender(event);
+    if (!concatClient || !concatClient.started) throw new Error('concat_not_connected');
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('invalid_concat_payload');
+    const name = String(payload.name || '');
+    const args = payload.args === undefined ? {} : payload.args;
+    if (MUTATING_TOOLS.has(name)) {
+      const choice = await dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        title: 'تأیید تغییر در Motion Studio',
+        message: 'این ابزار می‌تواند پروژه و فایل‌های ویدئویی را تغییر دهد.',
+        detail: 'ابزار: ' + name + '\nورودی:\n' + JSON.stringify(args, null, 2).slice(0, 5000) + '\nفقط در صورتی ادامه بده که این تغییر را تأیید می‌کنی.',
+        buttons: ['لغو', 'اجرا'],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true
+      });
+      if (choice.response !== 1) return { ok: false, cancelled: true };
+    }
+    return { ok: true, result: await concatClient.callTool(name, args) };
+  });
   ipcMain.handle('companion:detect', async event => {
     assertTrustedSender(event);
     return detectLocalTools();
@@ -184,4 +223,5 @@ app.whenReady().then(() => {
   app.on('activate', () => { if (!mainWindow) createWindow(); else mainWindow.show(); });
 });
 
+app.on('before-quit', () => { concatClient?.close(); concatClient = null; });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

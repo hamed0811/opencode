@@ -19,7 +19,7 @@
       <header class="topbar">
         <div class="brand-lockup"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">COUNCIL<span>ROOM</span></div><div class="brand-caption">شورای توسعه نرم‌افزار</div></div></div>
         <div class="topbar-center"><div class="live-indicator"><i></i> آماده اجرای شورا</div><div class="session-id">جلسه <strong>—</strong> <span>•</span> در انتظار درخواست</div></div>
-        <div class="topbar-actions"><button class="companion-button" id="companionBtn"><i></i><span>Companion</span></button><button class="icon-button" id="pauseBtn" aria-label="لغو جلسه فعال" title="لغو جلسه فعال"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button><button class="icon-button" aria-label="اعلان‌ها" title="اعلان‌ها"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><b class="notification-dot"></b></button><div class="owner-chip"><span class="avatar owner-avatar">ح</span><span>مالک پروژه</span><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></div></div>
+        <div class="topbar-actions"><button class="motion-studio-button" id="motionStudioBtn" type="button"><span>Motion Studio</span></button><button class="companion-button" id="companionBtn"><i></i><span>Companion</span></button><button class="icon-button" id="pauseBtn" aria-label="لغو جلسه فعال" title="لغو جلسه فعال"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button><button class="icon-button" aria-label="اعلان‌ها" title="اعلان‌ها"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><b class="notification-dot"></b></button><div class="owner-chip"><span class="avatar owner-avatar">ح</span><span>مالک پروژه</span><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></div></div>
       </header>
 
       <main class="workspace">
@@ -41,6 +41,33 @@
           <section class="disputes-card panel"><div class="rail-title"><div><div class="eyebrow">نقد مستقل</div><h3>گزارش منتقد</h3></div></div><p class="empty-state">گزارش منتقد پس از اجرای جلسه در جریان گفت‌وگو ثبت می‌شود.</p></section>
           <section class="approval-card panel"><div class="approval-icon">!</div><div><div class="eyebrow">اجرای تغییرات کد</div><strong>قفل ایمنی فعال است</strong><p>اجرای کد توسط ایجنت‌ها تا زمان فراهم‌شدن Sandbox واقعی سیستم‌عامل غیرفعال است. تأیید انسانی به‌تنهایی مجوز اجرای کد نیست.</p></div></section></aside>
       </main>
+      <section class="motion-studio-modal" id="motionStudioModal" aria-hidden="true">
+        <div class="motion-studio-card panel">
+          <div class="motion-studio-head">
+            <div><div class="eyebrow">Concat MCP</div><h3>Motion Studio</h3></div>
+            <button class="small-icon" id="closeMotionStudio" type="button" aria-label="بستن"><svg viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"/></svg></button>
+          </div>
+          <p class="motion-studio-description">اتصال مستقیم به Concat از طریق MCP. برای حالت امن، Concat باید باز باشد و گزینه Scripts and apps در تنظیمات Automation فعال باشد.</p>
+          <div class="motion-studio-toolbar">
+            <span id="motionStudioStatus" role="status">اتصال برقرار نشده است.</span>
+            <button class="primary-action" id="connectConcatBtn" type="button">اتصال به Concat</button>
+          </div>
+          <div class="motion-studio-workspace" id="motionStudioWorkspace" hidden>
+            <label for="motionToolSelect">ابزار Concat</label>
+            <select id="motionToolSelect"><option value="">ابزار را انتخاب کنید</option></select>
+            <div class="motion-tool-description" id="motionToolDescription"></div>
+            <details class="motion-schema"><summary>مشاهده ورودی موردنیاز</summary><pre id="motionToolSchema"></pre></details>
+            <label for="motionToolArgs">ورودی JSON</label>
+            <textarea id="motionToolArgs" rows="6" spellcheck="false">{}</textarea>
+            <div class="motion-actions">
+              <button id="runMotionToolBtn" type="button" disabled>اجرای ابزار</button>
+              <button id="disconnectConcatBtn" type="button">قطع اتصال</button>
+            </div>
+            <label for="motionToolResult">نتیجه</label>
+            <pre id="motionToolResult" class="motion-tool-result" aria-live="polite">هنوز دستوری اجرا نشده است.</pre>
+          </div>
+        </div>
+      </section>
       <section class="companion-modal" id="companionModal" aria-hidden="true"><div class="companion-modal-card panel"><div class="companion-modal-head"><div><div class="eyebrow">Windows Companion</div><h3>ابزارهای شناسایی‌شده روی ویندوز</h3></div><button class="small-icon" id="closeCompanion" aria-label="بستن"><svg viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"/></svg></button></div><p class="companion-description">فقط نام، مسیر اجرایی و نسخه بررسی می‌شود؛ محتوای فایل‌ها و Secretها خوانده نمی‌شوند.</p><div class="companion-scan-status" id="companionStatus">برای شروع، دکمه شناسایی را بزنید.</div><div class="companion-results" id="companionResults"></div><button class="primary-action" id="scanCompanion">شناسایی ایجنت‌ها و ابزارها</button></div></section>
       <div class="toast" id="toast" role="status"></div>
     </div>

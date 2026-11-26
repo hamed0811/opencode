@@ -49,11 +49,13 @@ Workspace path validation is not a sandbox. Until the sandbox gate passes, agent
 - [ ] Test rollback and interrupted operations.
 
 ### 5. Motion Studio and Concat
-- [ ] Define the Motion Studio room schema and role prompts.
+- [ ] Define the complete Motion Studio room schema and role prompts.
+- [ ] Pass Concat MCP transport unit tests in CI.
+- [ ] Verify MCP initialize, tools/list, version detection, and process cleanup on the target Windows device.
 - [ ] Install Concat on the target Windows machine.
 - [ ] Verify the Concat binary and version.
-- [ ] Connect to Concat through its documented MCP interface.
-- [ ] Test project creation, media import, timeline edits, preview, and export.
+- [ ] Verify the initial supervised Concat MCP bridge through its documented interface.
+- [ ] Test project creation, media import, timeline edits, preview, save, export, cancellation, and crash recovery.
 - [ ] Handle Concat unavailable, process crash, timeout, and user cancellation.
 - [ ] Keep Concat paths and permissions configurable. Do not hardcode user-specific paths.
 

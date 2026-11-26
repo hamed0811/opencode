@@ -15,6 +15,7 @@ Council Room coordinates specialist agents, records their events, compares their
 - Session history is stored locally as JSONL and can be replayed.
 - A default model and per-role model overrides can be selected from the installed OpenCode model catalog.
 - Windows process-tree cancellation is supported.
+- An initial Concat MCP bridge and Motion Studio panel are being added on a feature branch. The bridge uses a fixed executable path, a restricted child environment, an explicit tool allowlist, and native confirmation for write operations. Real Windows validation is still pending.
 - Human approval decisions are recorded. Approval does not execute code or merge changes.
 - A Windows NSIS installer is built by CI.
 
@@ -24,7 +25,7 @@ Council Room coordinates specialist agents, records their events, compares their
 - Agent-driven file changes and shell execution are disabled.
 - Gateway credential storage and live provider integration are incomplete.
 - Git branch and Pull Request operations are not implemented in the desktop UI.
-- Motion Studio and Concat MCP integration are not implemented.
+- The initial Motion Studio panel and Concat MCP transport are in development. The real Concat handshake and end-to-end editing workflow are not yet verified.
 - End-to-end tests against a real OpenCode installation are pending.
 - Installation and smoke tests on a real Windows device are pending.
 - The project license must be selected before the project can be presented as an open-source release.
