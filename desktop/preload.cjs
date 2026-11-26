@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('councilCompanion', {
   connectConcat: () => ipcRenderer.invoke('concat:connect'),
   disconnectConcat: () => ipcRenderer.invoke('concat:disconnect'),
   callConcatTool: (name, args = {}) => ipcRenderer.invoke('concat:call', { name, args }),
+  runMotionStudioAgent: (prompt, model) => ipcRenderer.invoke('motion:run', { prompt, model }),
   onConcatNotification: callback => {
     if (typeof callback !== 'function') return () => {};
     const listener = (_event, payload) => callback(payload);

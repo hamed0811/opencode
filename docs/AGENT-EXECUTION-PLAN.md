@@ -132,3 +132,18 @@ Concat's current MCP documentation states that window mode routes through the op
 ## Release decision
 
 **NO-GO.** Keep agent write/execute features disabled until the isolation tests pass on the target Windows device. A green CI build alone is not proof of isolation.
+
+
+## Motion Studio AI planner
+
+The Motion Studio assistant uses the installed OpenCode 1.x CLI as a text planner only.
+
+- It uses OpenCode's default in-process run server with a private app-data working directory, not the user's source workspace.
+- It uses a custom primary agent with all OpenCode tools denied.
+- It sets `OPENCODE_DISABLE_PROJECT_CONFIG=1`, enables OpenCode pure mode to skip external plugins, and supplies a restricted inline config.
+- The model returns a JSON plan. It cannot call Concat or run shell commands directly.
+- The Electron main process validates every action against the negotiated Concat allowlist.
+- The main process executes Concat MCP calls and shows a native confirmation for each mutating call.
+- The planner has a three-round limit and an eight-action limit per request.
+
+This is a restricted Concat workflow. It does not enable source-code editing or command execution. The OpenCode runtime policy still requires a real-device test with the user's installed CLI version.

@@ -2,7 +2,8 @@ const { execFile, execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const MAX_PROMPT_LENGTH = 12000;
+const MAX_PROMPT_LENGTH = 24000;
+const MAX_CONFIG_CONTENT_LENGTH = 16000;
 const SAFE_ENV_KEYS = ['PATH','PATHEXT','COMSPEC','SYSTEMROOT','WINDIR','SYSTEMDRIVE','HOMEDRIVE','HOMEPATH','USERPROFILE','HOME','APPDATA','LOCALAPPDATA','PROGRAMDATA','PROGRAMFILES','PROGRAMFILES(X86)','PUBLIC','TEMP','TMP','OS','PROCESSOR_ARCHITECTURE','NUMBER_OF_PROCESSORS','LANG','LC_ALL','TERM','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_CACHE_HOME','OLLAMA_HOST'];
 
 function buildChildEnv(source = process.env) {
@@ -23,6 +24,23 @@ function resolveWorkspace(workspaceRoot, requestedCwd) {
     throw new Error('workspace_path_not_allowed');
   }
   return candidate;
+}
+
+function buildRuntimeEnv(source = process.env, options = {}) {
+  const env = buildChildEnv(source);
+  if (options.configContent !== undefined) {
+    const content = typeof options.configContent === 'string'
+      ? options.configContent
+      : JSON.stringify(options.configContent);
+    if (typeof content !== 'string' || content.length > MAX_CONFIG_CONTENT_LENGTH) throw new Error('invalid_opencode_config_content');
+    let parsed;
+    try { parsed = JSON.parse(content); } catch { throw new Error('invalid_opencode_config_content'); }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid_opencode_config_content');
+    env.OPENCODE_CONFIG_CONTENT = content;
+  }
+  if (options.disableProjectConfig === true) env.OPENCODE_DISABLE_PROJECT_CONFIG = '1';
+  if (options.pure === true) env.OPENCODE_PURE = '1';
+  return env;
 }
 
 function findOpenCodeCommand() {
@@ -92,7 +110,9 @@ function runOpenCodePrompt(prompt, options = {}) {
   if (agent !== undefined && !/^[a-z0-9][a-z0-9/_-]{0,63}$/i.test(agent)) return Promise.reject(new Error('invalid_agent_id'));
 
   // Start from an explicit allowlist. Do not inherit arbitrary credentials.
-  const env = { ...buildChildEnv(process.env), COUNCIL_OPENCODE_CLI: command, COUNCIL_OPENCODE_PROMPT: text };
+  let env;
+  try { env = { ...buildRuntimeEnv(process.env, options), COUNCIL_OPENCODE_CLI: command, COUNCIL_OPENCODE_PROMPT: text }; }
+  catch (error) { return Promise.reject(error); }
   if (options.model) env.COUNCIL_OPENCODE_MODEL = String(options.model);
   if (agent) env.COUNCIL_OPENCODE_AGENT = agent;
 
@@ -143,4 +163,4 @@ function runOpenCodePrompt(prompt, options = {}) {
   });
 }
 
-module.exports = { runOpenCodePrompt, listOpenCodeModels, parseOpenCodeModels, resolveWorkspace, findOpenCodeCommand, buildChildEnv, SAFE_ENV_KEYS, MAX_PROMPT_LENGTH };
+module.exports = { runOpenCodePrompt, listOpenCodeModels, parseOpenCodeModels, resolveWorkspace, findOpenCodeCommand, buildChildEnv, buildRuntimeEnv, SAFE_ENV_KEYS, MAX_PROMPT_LENGTH, MAX_CONFIG_CONTENT_LENGTH };
