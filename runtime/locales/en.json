@@ -1,0 +1,14 @@
+{
+  "app.title": "Council Room",
+  "connectors.title": "Connectors",
+  "connectors.status.disconnected": "Disconnected",
+  "connectors.status.connected": "Connected",
+  "connectors.status.needs_auth": "Needs authentication",
+  "connectors.action.connect": "Connect",
+  "connectors.action.disconnect": "Disconnect",
+  "connectors.action.test": "Test connection",
+  "agents.title": "Agents",
+  "runs.title": "Task runs",
+  "approval.required": "Approval required",
+  "errors.generic": "Something went wrong"
+}
