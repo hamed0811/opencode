@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const { execFile } = require('node:child_process');
 const { runOpenCodePrompt, listOpenCodeModels, buildChildEnv } = require('./opencode-runner.cjs');
 const { createCouncilRuntime } = require('./council-runtime.cjs');
-const { ConcatMcpClient, MUTATING_TOOLS } = require('./concat-mcp.cjs');
+const { ConcatMcpClient, MUTATING_TOOLS, resolveConcatCommand } = require('./concat-mcp.cjs');
 
 let mainWindow;
 let tray;
@@ -76,6 +76,18 @@ async function detectLocalTools() {
       capabilities: found ? inferCapabilities(candidate.id) : [],
       details: found || null
     });
+  }
+  try {
+    const concatPath = resolveConcatCommand(process.env, process.platform);
+    results.push({
+      id: 'concat',
+      name: 'Concat',
+      status: 'available',
+      capabilities: ['mcp_server_detected'],
+      details: { path: concatPath, version: 'برای تأیید نسخه، اتصال MCP را اجرا کنید.' }
+    });
+  } catch {
+    results.push({ id: 'concat', name: 'Concat', status: 'not_found', capabilities: [], details: null });
   }
   return { platform: process.platform, hostname: require('node:os').hostname(), scannedAt: new Date().toISOString(), agents: results };
 }
