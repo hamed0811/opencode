@@ -141,8 +141,8 @@ async function runMotionStudioAgent(options) {
     if (plan.done) break;
   }
 
-  if (rounds === MAX_ROUNDS && executed.length >= MAX_ACTIONS) {
-    message = message || 'سقف عملیات این درخواست تکمیل شد.';
+  if (rounds === MAX_ROUNDS) {
+    message = message ? message + ' سقف سه دور این درخواست تکمیل شد؛ برای ادامه، درخواست بعدی را بفرست.' : 'سقف سه دور این درخواست تکمیل شد؛ برای ادامه، درخواست بعدی را بفرست.';
   }
   return { ok: true, message, rounds, actions: executed };
 }
