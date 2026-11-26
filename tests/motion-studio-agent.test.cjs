@@ -50,6 +50,19 @@ test('Motion Studio agent executes bounded tool rounds and returns the final mes
   assert.equal(result.message, 'پروژه ساخته شد');
 });
 
+test('Motion Studio agent stops when the user cancels a mutating action', async () => {
+  let executed = 0;
+  const result = await runMotionStudioAgent({
+    prompt: 'ایجاد پروژه',
+    tools,
+    runModel: async () => ({ text: '{"actions":[{"tool":"project_create","args":{"name":"Test"}},{"tool":"project_list","args":{}}],"message":"اجرا","done":false}' }),
+    executeTool: async () => { executed += 1; return { ok: false, cancelled: true }; }
+  });
+  assert.equal(executed, 1);
+  assert.equal(result.cancelled, true);
+  assert.equal(result.actions.length, 1);
+});
+
 test('Motion Studio agent rejects oversized user prompts', async () => {
   await assert.rejects(runMotionStudioAgent({
     prompt: 'x'.repeat(4001),
