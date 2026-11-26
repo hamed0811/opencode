@@ -67,7 +67,7 @@ The script reports the Windows edition, virtualization support, optional Windows
 
 ## Motion Studio AI boundary
 
-Motion Studio uses OpenCode as a planner. OpenCode runs its default in-process run server from the private Council Room user-data directory. Its project config is disabled. A controlled inline config denies all OpenCode tools. The model can only return a JSON action plan.
+Motion Studio uses OpenCode as a planner. OpenCode runs its default in-process run server from the private Council Room user-data directory. Its project config is disabled. Pure mode skips external OpenCode plugins. A controlled inline config denies all OpenCode tools. The model can only return a JSON action plan.
 
 The Electron main process validates each action against the Concat MCP tool allowlist. It executes the action through the supervised Concat MCP process. Every mutating action requires a native confirmation dialog that shows the complete arguments. The planner cannot run PowerShell, CMD, shell, or source-file edit tools.
 
