@@ -13,7 +13,7 @@ npm run desktop
 اگر `COUNCIL_WORKSPACE` را تنظیم نکنید، برنامه از پوشه جداگانه زیر استفاده می‌کند:
 
 ```
-<userData>\\workspace
+<userData>\workspace
 ```
 
 Runner مسیر واقعی پوشه را بررسی می‌کند. اجرای خارج از Workspace رد می‌شود. Renderer نمی‌تواند مقدار `cwd` را انتخاب کند.
