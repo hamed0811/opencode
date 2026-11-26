@@ -1,28 +1,29 @@
-# TODO — Council Room
+# Council Room — وضعیت واقعی پروژه
 
-## موجود در رابط کاربری
-- [x] Create RTL command-center shell and responsive layouts.
-- [x] Show the agent roster, timeline, filters, disagreement examples, and judge panel as sample UI.
-- [x] Add project-owner composer.
-- [x] Add sample consultation scenario and role prompts.
+## انجام‌شده در شاخه hardening
+- [x] اجرای Electron با مسیرهای نسبی برای فایل‌های محلی.
+- [x] محدودسازی محیط فرایند OpenCode به allowlist.
+- [x] محدودسازی مسیر کاری به Workspace.
+- [x] محدودسازی بازکردن مسیرها به Workspace.
+- [x] بررسی فایل‌های اجرایی CMD/BAT با PowerShell در ویندوز.
+- [x] حذف ادعای قابلیت ابزارها که فقط از روی نام فایل قابل اثبات نیستند.
+- [x] برچسب‌گذاری داده‌های ثابت داشبورد به‌عنوان نمونه.
+- [x] بارگذاری تنظیمات پروژه از Main Process در حالت دسکتاپ.
+- [x] افزودن تست‌های واحد و CI برای Node.js و Windows.
+- [ ] اجرای تست روی Windows واقعی و ساخت Installer.
 
-## Runtime محلی
-- [x] Send one prompt to the local OpenCode CLI from the desktop app.
-- [x] Resolve the Windows OpenCode command through PATH, including npm command shims.
-- [x] Restrict the OpenCode working directory to a canonical workspace root.
-- [x] Validate the trusted Electron IPC sender.
-- [x] Add automated tests for workspace boundary validation.
-- [ ] Implement a real multi-agent orchestrator with independent agent runs.
-- [ ] Persist run state, messages, tool calls, and results in an event store.
-- [ ] Implement real pause/cancel for running tasks.
-- [ ] Implement a real final judge over agent outputs.
+## هنوز پیاده‌سازی نشده
+- [ ] Orchestrator چندایجنتی واقعی.
+- [ ] اجرای مستقل و موازی Agentها با نقش و مدل مجزا.
+- [ ] Message Bus و Event Store پایدار.
+- [ ] نقد متقابل و قاضی نهایی واقعی.
+- [ ] توقف و لغو واقعی اجرای فرایند.
+- [ ] گردش‌کار تأیید انسانی با ثبت رویداد.
+- [ ] اتصال واقعی Gateway و مدیریت امن Secretها.
+- [ ] ساخت Branch و Pull Request از داخل برنامه.
+- [ ] تست End-to-End برای کل مسیر محصول.
 
-## امنیت و یکپارچه‌سازی
-- [ ] Add a user-controlled workspace picker and persist its approved path.
-- [ ] Implement secure secret storage and real provider connection checks.
-- [ ] Implement real approval records linked to specific actions.
-- [ ] Implement GitHub branch, commit, checks, and Draft PR flow.
-- [ ] Add integration and end-to-end tests on Windows.
-- [ ] Verify the packaged Electron app on a real Windows machine.
-
-**وضعیت:** داشبورد هنوز یک جلسه چندایجنتی واقعی نیست. دکمه‌های تأیید و Gateway نیز به سرویس اجرایی متصل نیستند.
+## محدودیت مهم
+این نسخه یک Windows Companion برای اجرای یک درخواست OpenCode در Workspace است.
+داشبورد هنوز Orchestrator چندایجنتی نیست.
+هیچ داده نمونه‌ای نباید به‌عنوان وضعیت زنده، امتیاز سلامت یا حکم واقعی تفسیر شود.
