@@ -144,13 +144,17 @@ function handleCouncilEvent(event) {
     ].join('\n');
     runtimeMessage('judge', 'قاضی نهایی', 'Final Judge', summary, 'حکم نهایی', event.approvalRequired ? 'critical' : 'reply');
     const approve = document.getElementById('approveBtn');
+    const reject = document.getElementById('rejectBtn');
     approve.disabled = !event.approvalRequired;
-    approve.textContent = event.approvalRequired ? 'ثبت تصمیم انسانی' : 'نیاز به تأیید انسانی ثبت نشد';
+    reject.disabled = !event.approvalRequired;
+    approve.textContent = event.approvalRequired ? 'تأیید تصمیم' : 'نیاز به تأیید انسانی ثبت نشد';
     return;
   }
   if (event.type === 'human_approval_recorded') {
     runtimeMessage('pm', 'مالک پروژه', 'Human Approval', event.approved ? 'تصمیم انسانی ثبت شد؛ این ثبت به‌تنهایی هیچ کد یا عملیات Git را اجرا نمی‌کند.' : 'رد تصمیم انسانی ثبت شد.', 'ثبت تأیید', event.approved ? 'reply' : 'critical');
     approvalRunId = null;
+    document.getElementById('approveBtn').disabled = true;
+    document.getElementById('rejectBtn').disabled = true;
     return;
   }
   if (event.type === 'run_completed') {
@@ -303,6 +307,7 @@ messageInput.addEventListener('keydown', event => { if ((event.metaKey || event.
 messageInput.addEventListener('input', () => { messageInput.style.height = 'auto'; messageInput.style.height = `${Math.min(messageInput.scrollHeight, 100)}px`; });
 document.getElementById('pauseBtn').addEventListener('click', async () => { if (!activeRunId) { showToast('جلسه فعالی برای لغو وجود ندارد.'); return; } const result = await window.councilCompanion?.cancelCouncilRun?.(activeRunId); showToast(result?.ok ? 'درخواست لغو برای همه ایجنت‌ها ارسال شد.' : 'لغو جلسه ممکن نشد.'); });
 document.getElementById('approveBtn').addEventListener('click', () => recordHumanApproval(true));
+document.getElementById('rejectBtn').addEventListener('click', () => recordHumanApproval(false));
 document.getElementById('approvalBtn').addEventListener('click', () => { showToast('این کارت نمونه است. هیچ تأییدی ثبت نشد.'); });
 document.querySelector('.decline-small').addEventListener('click', () => showToast('این کارت نمونه است. هیچ درخواستی رد یا تغییر داده نشد.'));
 document.getElementById('detailsBtn').addEventListener('click', () => showToast('این بخش فقط به سند نمونه اشاره می‌کند؛ حکم زنده‌ای برای نمایش وجود ندارد.'));

@@ -203,7 +203,16 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
   }
 
   function recordApproval(runId, approved, note = '') {
-    const record = approvals.get(runId);
+    let record = approvals.get(runId);
+    if (!record) {
+      const priorEvents = store.read(runId);
+      const judgment = priorEvents.find(event => event.type === 'judge_result');
+      const priorApproval = priorEvents.find(event => event.type === 'human_approval_recorded');
+      if (judgment?.approvalRequired) {
+        record = { required: true, recorded: Boolean(priorApproval) };
+        approvals.set(runId, record);
+      }
+    }
     if (!record?.required) throw new Error('approval_not_required_or_run_not_finished');
     if (record.recorded) throw new Error('approval_already_recorded');
     record.recorded = true;

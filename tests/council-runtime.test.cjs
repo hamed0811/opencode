@@ -105,7 +105,8 @@ test('human approval is recorded once and never runs an action', async () => {
   const done = waitFor(sink, 'run_completed');
   const { runId } = runtime.start('Need human review.');
   await done;
-  assert.equal(runtime.recordApproval(runId, true).ok, true);
-  assert.throws(() => runtime.recordApproval(runId, true), /approval_already_recorded/);
+  const recoveredRuntime = createCouncilRuntime({ dataRoot: dir, runAgent: async () => 'unused' });
+  assert.equal(recoveredRuntime.recordApproval(runId, true).ok, true);
+  assert.throws(() => recoveredRuntime.recordApproval(runId, true), /approval_already_recorded/);
   fs.rmSync(dir, { recursive: true, force: true });
 });
