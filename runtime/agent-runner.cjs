@@ -15,7 +15,7 @@ const transitions = {
 class AgentRunner extends EventEmitter {
   constructor(options = {}) {
     super();
-    this.handlers = options.handlers || {\n      plan: options.plan, execute: options.execute, review: options.review\n    };
+    this.handlers = options.handlers || { plan: options.plan, execute: options.execute, review: options.review };
     this.runs = new Map();
   }
   createRun(task, options = {}) {
