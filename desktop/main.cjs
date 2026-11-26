@@ -109,7 +109,7 @@ app.whenReady().then(() => {
 
   councilRuntime = createCouncilRuntime({
     dataRoot: path.join(app.getPath('userData'), 'council-runs'),
-    runAgent: (prompt, options = {}) => runOpenCodePrompt(prompt, { model: options.model, signal: options.signal, workspaceRoot }),
+    runAgent: (prompt, options = {}) => runOpenCodePrompt(prompt, { model: options.model, agent: 'plan', signal: options.signal, workspaceRoot }),
     emit: event => mainWindow?.webContents.send('council:event', event)
   });
 

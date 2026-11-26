@@ -57,16 +57,20 @@ function runOpenCodePrompt(prompt, options = {}) {
     return Promise.reject(error);
   }
 
+  const agent = options.agent === undefined ? undefined : String(options.agent);
+  if (agent !== undefined && !/^[a-z0-9][a-z0-9/_-]{0,63}$/i.test(agent)) return Promise.reject(new Error('invalid_agent_id'));
+
   // Start from an explicit allowlist. Do not inherit arbitrary credentials.
   const env = { ...buildChildEnv(process.env), COUNCIL_OPENCODE_CLI: command, COUNCIL_OPENCODE_PROMPT: text };
   if (options.model) env.COUNCIL_OPENCODE_MODEL = String(options.model);
+  if (agent) env.COUNCIL_OPENCODE_AGENT = agent;
 
   const windows = process.platform === 'win32';
   const executable = windows ? 'powershell.exe' : command;
   const args = windows
     ? ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
-      "$ErrorActionPreference='Stop'; if ($env:COUNCIL_OPENCODE_MODEL) { & $env:COUNCIL_OPENCODE_CLI run --model $env:COUNCIL_OPENCODE_MODEL $env:COUNCIL_OPENCODE_PROMPT } else { & $env:COUNCIL_OPENCODE_CLI run $env:COUNCIL_OPENCODE_PROMPT }; exit $LASTEXITCODE"]
-    : ['run', ...(options.model ? ['--model', String(options.model)] : []), text];
+      "$ErrorActionPreference='Stop'; $cliArgs=@('run'); if ($env:COUNCIL_OPENCODE_AGENT) { $cliArgs += @('--agent',$env:COUNCIL_OPENCODE_AGENT) }; if ($env:COUNCIL_OPENCODE_MODEL) { $cliArgs += @('--model',$env:COUNCIL_OPENCODE_MODEL) }; $cliArgs += $env:COUNCIL_OPENCODE_PROMPT; & $env:COUNCIL_OPENCODE_CLI @cliArgs; exit $LASTEXITCODE"]
+    : ['run', ...(agent ? ['--agent', agent] : []), ...(options.model ? ['--model', String(options.model)] : []), text];
 
   return new Promise((resolve, reject) => {
     const child = execFile(executable, args, {
