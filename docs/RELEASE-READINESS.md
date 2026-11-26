@@ -52,6 +52,7 @@ Workspace path validation is not a sandbox. Until the sandbox gate passes, agent
 - [x] Add a bounded Motion Studio AI planner with a strict JSON action contract.
 - [x] Deny all OpenCode tools to the Motion Studio planner.
 - [x] Validate Concat actions in the Electron main process and require native confirmation for writes.
+- [x] Propagate Concat MCP tool errors to Motion Studio and stop dependent actions after a failed step.
 - [ ] Verify OpenCode tool denial and the full Motion Studio workflow on the target Windows device.
 - [x] Pass Concat MCP transport unit tests in CI (mock server).
 - [ ] Verify MCP initialize, tools/list, version detection, and process cleanup on the target Windows device.
@@ -59,7 +60,8 @@ Workspace path validation is not a sandbox. Until the sandbox gate passes, agent
 - [x] Verify the Concat executable path and installed version through Windows.
 - [ ] Verify the initial supervised Concat MCP bridge through its documented interface on the real device.
 - [ ] Test project creation, media import, timeline edits, preview, save, export, cancellation, and crash recovery on real Concat.
-- [ ] Handle Concat unavailable, process crash, timeout, and user cancellation.
+- [x] Unit-test Concat process-exit propagation and MCP reconnect with a mock process.
+- [ ] Verify Concat unavailable, process crash, timeout, and user cancellation on the real Windows device.
 - [ ] Keep Concat paths and permissions configurable. Do not hardcode user-specific paths.
 
 ### 6. Windows release
