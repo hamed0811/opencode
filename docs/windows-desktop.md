@@ -32,6 +32,10 @@ npm run desktop:installer
 - Workspace validation limits the process working directory. It is not an operating-system sandbox. OpenCode still runs with the current Windows user's permissions and may access other files through its own tools. Do not treat this as isolation from untrusted prompts or code.
 - Tool discovery checks executable names and version output. It does not prove that a tool can read files, run tests, or act as an agent.
 - Project configuration is read by the main process from the bundled config directory.
+- The initial Concat MCP bridge starts only the installed Concat executable with `--mcp window`. It does not fall back to headless mode.
+- The bridge passes a restricted environment to Concat. It does not pass arbitrary API keys or custom secret variables.
+- The bridge exposes only an explicit Concat tool allowlist. Mutating tools require a native Electron confirmation that displays the tool name and arguments.
+- Concat MCP access is not a sandbox for agent code. Concat retains its own project-root rules. Council Room does not set `CONCAT_MCP_ROOTS`.
 
 ## Current product behavior
 - The desktop app runs six independent consultation roles, then a Critic and a Final Judge.
@@ -40,6 +44,7 @@ npm run desktop:installer
 - A session model and per-role model overrides can be selected in the desktop settings.
 - Human approval records a decision only. It does not execute code or perform Git operations.
 - Agent-driven code changes remain disabled until a real OS-level sandbox and controlled tool policy are implemented.
+- Motion Studio requires Concat to be open with Settings > Automation > Scripts and apps enabled. The MCP bridge uses `window` mode so it fails instead of silently switching to headless mode.
 - Workspace validation is not a security sandbox. OpenCode still runs with the current Windows user's permissions.
 - Windows execution and installer behavior must be verified on a real Windows machine before release.
 
