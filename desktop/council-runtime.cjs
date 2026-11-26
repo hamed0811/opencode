@@ -93,9 +93,10 @@ function createEventStore(dataRoot) {
   return { append, read, list };
 }
 
-function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency = 5 }) {
+function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency = 5, agentModels = {} }) {
   if (typeof runAgent !== 'function') throw new Error('run_agent_required');
   const store = createEventStore(dataRoot);
+  const safeAgentModels = Object.fromEntries(Object.entries(agentModels || {}).filter(([id, model]) => /^[a-z][a-z0-9_-]{0,31}$/.test(id) && typeof model === 'string' && model.trim().length > 0 && model.length <= 160).map(([id, model]) => [id, model.trim()]));
   const active = new Map();
   const approvals = new Map();
 
@@ -133,7 +134,7 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
           '- Secret یا مقدار credential را تکرار نکن.\n' +
           '- نتیجه را با نکته‌های قابل بررسی و کوتاه ارائه بده.';
         try {
-          const result = await runAgent(agentPrompt, { model, signal: controller.signal, agentId: agent.id });
+          const result = await runAgent(agentPrompt, { model: safeAgentModels[agent.id] || model, signal: controller.signal, agentId: agent.id });
           const content = redactText(result?.text || result || '').slice(0, MAX_AGENT_OUTPUT);
           if (!content.trim()) throw new Error('empty_agent_response');
           const finding = { agentId: agent.id, agentName: agent.name, role: agent.role, content };
@@ -156,7 +157,7 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
       let critique = '';
       try {
         const result = await runAgent(CRITIC_SYSTEM + '\n\nدرخواست کاربر:\n' + prompt + '\n\nیافته‌های مستقل:\n' + evidence +
-          '\n\nتناقض‌ها و ریسک‌ها را با ارجاع به نام ایجنت مشخص کن.', { model, signal: controller.signal, agentId: 'critic' });
+          '\n\nتناقض‌ها و ریسک‌ها را با ارجاع به نام ایجنت مشخص کن.', { model: safeAgentModels.critic || model, signal: controller.signal, agentId: 'critic' });
         critique = redactText(result?.text || result || '').slice(0, MAX_AGENT_OUTPUT);
         publish(runId, 'critic_completed', { agentId: 'critic', agentName: 'منتقد مخالف', role: 'Cross-Critique', content: critique });
       } catch (error) {
@@ -169,7 +170,7 @@ function createCouncilRuntime({ dataRoot, runAgent, emit = () => {}, concurrency
       const judgeInput = JUDGE_SYSTEM + '\n\nدرخواست:\n' + prompt + '\n\nیافته‌ها:\n' + evidence +
         '\n\nنقد متقابل:\n' + (critique || 'نقد متقابل در دسترس نیست.') +
         '\n\nاگر هر ایجنت شکست خورده، این محدودیت را در ریسک‌ها ثبت کن.';
-      const judgeResponse = await runAgent(judgeInput, { model, signal: controller.signal, agentId: 'judge' });
+      const judgeResponse = await runAgent(judgeInput, { model: safeAgentModels.judge || model, signal: controller.signal, agentId: 'judge' });
       const judge = parseJudgeResult(judgeResponse?.text || judgeResponse || '');
       const approvalRequired = judge.required_human_approval || ['NEEDS_MORE_INFORMATION','REJECTED','HUMAN_APPROVAL_REQUIRED'].includes(judge.decision);
       run.approvalRequired = approvalRequired;

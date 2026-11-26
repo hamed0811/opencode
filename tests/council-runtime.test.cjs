@@ -75,6 +75,29 @@ test('council runs independent agents concurrently and persists final judgment',
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('per-agent model overrides take precedence over the session model', async () => {
+  const dir = tempDir();
+  const sink = eventSink();
+  const observed = new Map();
+  const runtime = createCouncilRuntime({
+    dataRoot: dir,
+    concurrency: 6,
+    agentModels: { architect: 'local/architect-model' },
+    emit: sink.emit,
+    runAgent: async (_prompt, options) => {
+      observed.set(options.agentId, options.model || null);
+      if (options.agentId === 'judge') return '{\"decision\":\"APPROVED\",\"confidence\":0.7,\"reasons\":[]}';
+      return 'review';
+    }
+  });
+  const done = waitFor(sink, 'run_completed');
+  runtime.start('Check model routing.', { model: 'local/default-model' });
+  await done;
+  assert.equal(observed.get('architect'), 'local/architect-model');
+  assert.equal(observed.get('backend'), 'local/default-model');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test('active run can be cancelled and emits cancellation event', async () => {
   const dir = tempDir();
   const sink = eventSink();

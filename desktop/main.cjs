@@ -107,8 +107,13 @@ app.whenReady().then(() => {
   workspaceRoot = path.resolve(process.env.COUNCIL_WORKSPACE || path.join(app.getPath('userData'), 'workspace'));
   fs.mkdirSync(workspaceRoot, { recursive: true });
 
+  const runtimeConfigPath = path.join(__dirname, '..', 'config', 'council.config.json');
+  let runtimeConfig = {};
+  try { runtimeConfig = JSON.parse(fs.readFileSync(runtimeConfigPath, 'utf8')).councilRuntime || {}; } catch {}
   councilRuntime = createCouncilRuntime({
     dataRoot: path.join(app.getPath('userData'), 'council-runs'),
+    concurrency: runtimeConfig.concurrency,
+    agentModels: runtimeConfig.agentModels,
     runAgent: (prompt, options = {}) => runOpenCodePrompt(prompt, { model: options.model, agent: 'plan', signal: options.signal, workspaceRoot }),
     emit: event => mainWindow?.webContents.send('council:event', event)
   });

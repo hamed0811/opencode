@@ -19,7 +19,7 @@ Providerهای دیگر در کانفیگ با وضعیت optional و disabled-b
 The desktop runtime starts six independent OpenCode CLI runs in parallel:
 Requirements, Architect, Backend, Security, QA, and DevOps. Each run receives a role-specific prompt and the same user task. Every consultation runs with OpenCode's built-in plan agent (`--agent plan`), which blocks normal project edits. The runtime does not use the build agent for consultation. The Critic then reviews the independent findings. The Final Judge receives the findings and critique and must return a validated JSON decision.
 
-The runtime uses the locally installed OpenCode CLI. It does not add a cloud provider or API key. It does not pass --auto. The plan agent blocks normal file edits; shell permissions remain governed by the user's OpenCode configuration.
+The runtime uses the locally installed OpenCode CLI. Optional model overrides can be set per role in `councilRuntime.agentModels` in `config/council.config.json`. A null value uses the user's current OpenCode model. It does not add a cloud provider or API key. It does not pass --auto. The plan agent blocks normal file edits; shell permissions remain governed by the user's OpenCode configuration.
 
 Events are sent from Electron Main Process to the renderer through a narrow preload API. Each run is stored as a separate JSONL event log under Electron userData. Common credential patterns are redacted before events are persisted or displayed.
 

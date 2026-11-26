@@ -442,5 +442,18 @@
       "showDiffs": true,
       "showApprovals": true
     }
+  },
+  "councilRuntime": {
+    "concurrency": 5,
+    "agentModels": {
+      "requirements": null,
+      "architect": null,
+      "backend": null,
+      "security": null,
+      "qa": null,
+      "devops": null,
+      "critic": null,
+      "judge": null
+    }
   }
 }
