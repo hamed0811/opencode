@@ -28,3 +28,12 @@
 .motion-actions button:disabled{opacity:.45;cursor:not-allowed}
 .motion-actions button:last-child{background:#2a1b22;border-color:#63404b;color:#f0c1ca}
 @media(max-width:600px){.motion-studio-button{font-size:8px;padding:0 7px}.motion-studio-card{padding:14px}.motion-studio-toolbar{align-items:flex-start;flex-direction:column}.motion-actions{flex-wrap:wrap}}
+
+
+.motion-agent-chat{display:grid;gap:9px;padding:12px;border:1px solid #29415d;border-radius:9px;background:#0c1928}
+.motion-agent-chat>label{font-size:10px;color:#a9c0d4}
+.motion-agent-chat textarea{width:100%;border:1px solid #29415d;border-radius:7px;background:#091523;color:#d9e7f3;padding:10px;font:inherit;font-size:11px;resize:vertical;min-height:72px}
+.motion-agent-chat .motion-actions button:first-child{background:#164d50;border-color:#267d78;color:#d5fffa}
+.motion-manual-tools{border:1px solid var(--line-soft);border-radius:8px;padding:10px}
+.motion-manual-tools>summary{font-size:10px;color:#a9c0d4;cursor:pointer;margin-bottom:10px}
+.motion-manual-tools[open]{display:grid;gap:9px}
