@@ -408,10 +408,11 @@
   },
   "execution": {
     "sandbox": {
-      "enabled": true,
-      "network": "deny_by_default",
+      "enabled": false,
+      "network": "not_enforced",
       "timeoutSeconds": 900,
-      "maxFilesChangedPerRun": 80
+      "maxFilesChangedPerRun": 80,
+      "note": "Code execution is disabled. Workspace path checks are not an OS sandbox. Do not enable until a tested Windows OS-level isolation backend and deny-by-default network policy are implemented."
     },
     "allowedTools": [
       "read_file",
