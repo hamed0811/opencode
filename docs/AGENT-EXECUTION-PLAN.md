@@ -127,6 +127,8 @@ Concat's current MCP documentation states that window mode routes through the op
 - No Windows isolation backend has been selected or verified. A read-only PowerShell preflight script now reports edition, virtualization, optional features, services, and firewall defaults.
 - GitHub Copilot review has been requested in PR #1. The issue comment did not trigger a review; the supported reviewer request still needs to be sent from the PR Reviewers control or API.
 - The project license remains `UNLICENSED`.
+- CI reported 8 npm vulnerabilities in the current dependency tree (6 moderate, 2 high). The exact advisory report is being added to CI output.
+- The current Electron dependency resolves to 35.7.5, which is end-of-life. A supported stable Electron upgrade is required before release.
 
 ## Release decision
 
