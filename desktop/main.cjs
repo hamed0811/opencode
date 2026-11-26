@@ -66,11 +66,7 @@ async function detectLocalTools() {
 }
 
 function inferCapabilities(id) {
-  if (['opencode', 'claude', 'cursor', 'cline', 'aider', 'gemini'].includes(id)) return ['code', 'read_files', 'run_tests', 'git'];
-  if (id === 'git') return ['branch', 'commit', 'diff'];
-  if (id === 'docker') return ['sandbox', 'containers'];
-  if (id === 'node' || id === 'python') return ['runtime', 'tests'];
-  return ['detected'];
+  return ['executable_detected'];
 }
 
 function createWindow() {
@@ -102,6 +98,12 @@ app.whenReady().then(() => {
     assertTrustedSender(event);
     return detectLocalTools();
   });
+  ipcMain.handle('companion:load-project-config', event => {
+    assertTrustedSender(event);
+    const configPath = path.join(__dirname, '..', 'config', 'council.config.json');
+    try { return JSON.parse(fs.readFileSync(configPath, 'utf8')); }
+    catch (error) { if (error.code === 'ENOENT') return {}; throw new Error('project_config_invalid_or_unreadable'); }
+  });
   ipcMain.handle('opencode:run-prompt', async (event, payload = {}) => {
     assertTrustedSender(event);
     try {
@@ -116,7 +118,11 @@ app.whenReady().then(() => {
   ipcMain.handle('companion:open-path', (event, target) => {
     assertTrustedSender(event);
     if (typeof target !== 'string' || !path.isAbsolute(target)) throw new Error('invalid_path');
-    return shell.openPath(target);
+    let canonical;
+    try { canonical = fs.realpathSync(target); } catch { throw new Error('path_not_found'); }
+    const relative = path.relative(workspaceRoot, canonical);
+    if (relative === '..' || relative.startsWith('..' + path.sep) || path.isAbsolute(relative)) throw new Error('path_outside_workspace');
+    return shell.openPath(canonical);
   });
 
   createWindow();
