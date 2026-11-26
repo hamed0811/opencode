@@ -523,6 +523,20 @@ runMotionToolBtn?.addEventListener('click', async () => {
     showToast('اجرای ابزار Concat ناموفق بود.');
   } finally { runMotionToolBtn.disabled = false; }
 });
+window.councilCompanion?.onConcatNotification?.(message => {
+  if (message?.method === 'notifications/progress') {
+    const params = message.params || {};
+    const progress = Number(params.progress);
+    const total = Number(params.total);
+    if (Number.isFinite(progress) && Number.isFinite(total) && total > 0) {
+      motionStudioStatus.textContent = `در حال اجرا: ${Math.round(progress / total * 100)}٪`;
+    } else {
+      motionStudioStatus.textContent = String(params.message || 'Concat در حال اجراست.');
+    }
+  } else if (message?.method === 'notifications/cancelled') {
+    motionStudioStatus.textContent = 'عملیات Concat لغو شد.';
+  }
+});
 document.getElementById('disconnectConcatBtn')?.addEventListener('click', async () => {
   try { await window.councilCompanion?.disconnectConcat?.(); } catch {}
   concatTools = [];
