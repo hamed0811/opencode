@@ -10,14 +10,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/desktop-companion.css" />
     <script defer src="/app.js"></script>
+    <script defer src="/desktop-companion.js"></script>
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
         <div class="brand-lockup"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">COUNCIL<span>ROOM</span></div><div class="brand-caption">شورای توسعه نرم‌افزار</div></div></div>
         <div class="topbar-center"><div class="live-indicator"><i></i> جلسه زنده</div><div class="session-id">جلسه <strong>OP-001</strong> <span>•</span> ساخت نسخه اولیه opencode</div></div>
-        <div class="topbar-actions"><button class="icon-button" id="pauseBtn" aria-label="توقف جلسه" title="توقف جلسه"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button><button class="icon-button" aria-label="اعلان‌ها" title="اعلان‌ها"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><b class="notification-dot"></b></button><div class="owner-chip"><span class="avatar owner-avatar">ح</span><span>حامد</span><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></div></div>
+        <div class="topbar-actions"><button class="companion-button" id="companionBtn"><i></i><span>Companion</span></button><button class="icon-button" id="pauseBtn" aria-label="توقف جلسه" title="توقف جلسه"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button><button class="icon-button" aria-label="اعلان‌ها" title="اعلان‌ها"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><b class="notification-dot"></b></button><div class="owner-chip"><span class="avatar owner-avatar">ح</span><span>حامد</span><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></div></div>
       </header>
 
       <main class="workspace">
@@ -38,6 +40,7 @@
           <section class="disputes-card panel"><div class="rail-title"><div><div class="eyebrow">گفت‌وگوی چالشی</div><h3>اختلاف‌نظرها <span class="count-badge orange">۲</span></h3></div><button class="small-icon" aria-label="بیشتر"><svg viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg></button></div><div class="dispute-item"><div class="dispute-top"><span class="dispute-tag orange-tag">باز</span><span class="dispute-time">۲ دقیقه پیش</span></div><strong>سطح دسترسی ابزارها</strong><p>آیا shell باید برای همه ایجنت‌ها فعال باشد؟</p><div class="dispute-voices"><span class="mini-avatar architect-avatar">م</span><span class="mini-avatar security-avatar">ا</span><span class="voice-count">+۲ نظر</span></div></div><div class="dispute-item"><div class="dispute-top"><span class="dispute-tag purple-tag">حل‌شده</span><span class="dispute-time">۵ دقیقه پیش</span></div><strong>مدل اجرای تست</strong><p>تست‌ها در sandbox اجرا شوند یا CI؟</p><div class="dispute-voices"><span class="mini-avatar backend-avatar">ب</span><span class="mini-avatar qa-avatar">ت</span><span class="voice-count">+۳ نظر</span></div></div><button class="full-width-action">مشاهده همه اختلاف‌نظرها <span>←</span></button></section>
           <section class="approval-card panel"><div class="approval-icon">!</div><div><div class="eyebrow">نیازمند اقدام شما</div><strong>اجرای تست‌های integration در CI</strong><p>قاضی برای ادامه ساخت Pull Request منتظر تأیید مدیر پروژه است.</p><div class="approval-actions"><button id="approvalBtn" class="approve-small">تأیید</button><button class="decline-small">بررسی بعدی</button></div></div></section></aside>
       </main>
+      <section class="companion-modal" id="companionModal" aria-hidden="true"><div class="companion-modal-card panel"><div class="companion-modal-head"><div><div class="eyebrow">Windows Companion</div><h3>ابزارهای شناسایی‌شده روی ویندوز</h3></div><button class="small-icon" id="closeCompanion" aria-label="بستن"><svg viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"/></svg></button></div><p class="companion-description">فقط نام، مسیر اجرایی و نسخه بررسی می‌شود؛ محتوای فایل‌ها و Secretها خوانده نمی‌شوند.</p><div class="companion-scan-status" id="companionStatus">برای شروع، دکمه شناسایی را بزنید.</div><div class="companion-results" id="companionResults"></div><button class="primary-action" id="scanCompanion">شناسایی ایجنت‌ها و ابزارها</button></div></section>
       <div class="toast" id="toast" role="status"></div>
     </div>
   </body>

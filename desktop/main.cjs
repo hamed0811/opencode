@@ -1,0 +1,96 @@
+const { app, BrowserWindow, ipcMain, Menu, Tray, shell } = require('electron');
+const path = require('node:path');
+const { execFile } = require('node:child_process');
+
+let mainWindow;
+let tray;
+
+const candidates = [
+  { id: 'opencode', name: 'OpenCode', commands: ['opencode'] },
+  { id: 'claude', name: 'Claude Code', commands: ['claude'] },
+  { id: 'cursor', name: 'Cursor', commands: ['cursor'] },
+  { id: 'cline', name: 'Cline CLI', commands: ['cline'] },
+  { id: 'aider', name: 'Aider', commands: ['aider'] },
+  { id: 'gemini', name: 'Gemini CLI', commands: ['gemini'] },
+  { id: 'git', name: 'Git', commands: ['git'] },
+  { id: 'node', name: 'Node.js', commands: ['node'] },
+  { id: 'python', name: 'Python', commands: ['python', 'py'] },
+  { id: 'docker', name: 'Docker', commands: ['docker'] },
+  { id: 'code', name: 'VS Code', commands: ['code'] }
+];
+
+function runCommand(command, args, timeout = 2500) {
+  return new Promise(resolve => {
+    execFile(command, args, { windowsHide: true, timeout }, (error, stdout, stderr) => {
+      if (error) return resolve({ ok: false, error: error.code || 'not_found' });
+      resolve({ ok: true, output: String(stdout || stderr || '').trim().split(/\r?\n/)[0].slice(0, 160) });
+    });
+  });
+}
+
+async function detectLocalTools() {
+  const results = [];
+  for (const candidate of candidates) {
+    let found = null;
+    for (const command of candidate.commands) {
+      const probe = process.platform === 'win32' ? await runCommand('where.exe', [command]) : await runCommand('which', [command]);
+      if (probe.ok) {
+        const version = await runCommand(command, ['--version']);
+        found = { command, path: probe.output, version: version.ok ? version.output : 'unknown' };
+        break;
+      }
+    }
+    results.push({
+      id: candidate.id,
+      name: candidate.name,
+      status: found ? 'available' : 'not_found',
+      capabilities: found ? inferCapabilities(candidate.id) : [],
+      details: found || null
+    });
+  }
+  return { platform: process.platform, hostname: require('node:os').hostname(), scannedAt: new Date().toISOString(), agents: results };
+}
+
+function inferCapabilities(id) {
+  if (['opencode', 'claude', 'cursor', 'cline', 'aider', 'gemini'].includes(id)) return ['code', 'read_files', 'run_tests', 'git'];
+  if (id === 'git') return ['branch', 'commit', 'diff'];
+  if (id === 'docker') return ['sandbox', 'containers'];
+  if (id === 'node' || id === 'python') return ['runtime', 'tests'];
+  return ['detected'];
+}
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1500,
+    height: 980,
+    minWidth: 1080,
+    minHeight: 700,
+    backgroundColor: '#080f1b',
+    title: 'Council Room',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  });
+  mainWindow.loadFile(path.join(__dirname, '..', 'index.html'));
+  mainWindow.on('closed', () => { mainWindow = null; });
+}
+
+app.whenReady().then(() => {
+  ipcMain.handle('companion:detect', detectLocalTools);
+  ipcMain.handle('companion:open-path', (_event, target) => shell.openPath(target));
+  createWindow();
+  tray = new Tray(path.join(__dirname, 'tray-icon.png'));
+  tray.setToolTip('Council Room — Windows Companion');
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: 'باز کردن Council Room', click: () => mainWindow?.show() },
+    { label: 'شناسایی ایجنت‌های ویندوز', click: () => mainWindow?.webContents.send('companion:scan-requested') },
+    { type: 'separator' },
+    { label: 'خروج', click: () => app.quit() }
+  ]));
+  app.on('activate', () => { if (!mainWindow) createWindow(); else mainWindow.show(); });
+});
+
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
