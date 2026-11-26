@@ -106,6 +106,32 @@ test('Concat MCP performs initialize, lists approved tools, and calls read-only 
   client.close();
 });
 
+test('Concat MCP rejects pending calls when the server exits and can reconnect', async () => {
+  const children = [];
+  const client = new ConcatMcpClient({
+    command: 'C:\\Concat\\concat.exe',
+    platform: 'linux',
+    env: { PATH: '/usr/bin' },
+    spawn: () => {
+      const child = fakeSpawn();
+      children.push(child);
+      return child;
+    }
+  });
+
+  await client.start();
+  const pending = client._request('test/pending', {}, 5000);
+  children[0].emit('exit', 1, null);
+  await assert.rejects(pending, /concat_process_exited/);
+  assert.equal(client.started, false);
+  assert.equal(client.child, null);
+
+  const reconnected = await client.start();
+  assert.equal(reconnected.ok, true);
+  assert.equal(children.length, 2);
+  client.close();
+});
+
 test('Concat MCP write tools are explicitly separated from read tools', () => {
   assert.ok(READ_ONLY_TOOLS.has('timeline_read'));
   assert.ok(MUTATING_TOOLS.has('clip_trim'));
