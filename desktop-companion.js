@@ -27,13 +27,8 @@
     scan.disabled = false;
   });
 
-  // Desktop mode performs a safe discovery on startup. It only checks
-  // executable names available through PATH and asks each tool for --version.
-  // It never reads project files, credentials, prompts, or environment secrets.
-  if (window.councilCompanion?.isDesktop) {
-    status.textContent = 'Companion فعال است؛ شناسایی خودکار آغاز می‌شود…';
-    window.setTimeout(() => scan.click(), 450);
-  } else {
+  // Scanning is user-triggered. Detection checks executable names and version output only.
+  if (!window.councilCompanion?.isDesktop) {
     button.classList.add('browser-mode');
   }
 })();
