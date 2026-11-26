@@ -4,6 +4,9 @@ contextBridge.exposeInMainWorld('councilCompanion', {
   isDesktop: true,
   platform: process.platform,
   detectLocalTools: () => ipcRenderer.invoke('companion:detect'),
+  connectConcat: () => ipcRenderer.invoke('concat:connect'),
+  disconnectConcat: () => ipcRenderer.invoke('concat:disconnect'),
+  callConcatTool: (name, args = {}) => ipcRenderer.invoke('concat:call', { name, args }),
   loadProjectConfig: () => ipcRenderer.invoke('companion:load-project-config'),
   runOpenCodePrompt: (prompt, options = {}) => ipcRenderer.invoke('opencode:run-prompt', {
     prompt,
