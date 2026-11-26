@@ -157,7 +157,12 @@ app.whenReady().then(() => {
 
   ipcMain.handle('concat:connect', async event => {
     assertTrustedSender(event);
-    if (!concatClient) concatClient = new ConcatMcpClient();
+    if (!concatClient) {
+      concatClient = new ConcatMcpClient();
+      concatClient.on('notification', message => {
+        mainWindow?.webContents.send('concat:notification', { method: message.method, params: message.params || {} });
+      });
+    }
     try { return await concatClient.start(); }
     catch (error) {
       concatClient?.close();
