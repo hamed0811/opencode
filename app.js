@@ -523,6 +523,11 @@ runMotionToolBtn?.addEventListener('click', async () => {
     showToast('اجرای ابزار Concat ناموفق بود.');
   } finally { runMotionToolBtn.disabled = false; }
 });
+window.councilCompanion?.onConcatExit?.(() => {
+  motionStudioStatus.textContent = 'فرایند Concat بسته شد. برای اتصال دوباره، دکمه اتصال را بزن.';
+  motionStudioWorkspace.hidden = true;
+  concatTools = [];
+});
 window.councilCompanion?.onConcatNotification?.(message => {
   if (message?.method === 'notifications/progress') {
     const params = message.params || {};
