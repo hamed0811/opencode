@@ -41,13 +41,14 @@ function assertTrustedSender(event) {
 async function runConcatToolWithApproval(name, args = {}) {
   if (!concatClient || !concatClient.started) throw new Error('concat_not_connected');
   if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('invalid_concat_arguments');
-  if (MUTATING_TOOLS.has(name)) {
+  const requiresConfirmation = MUTATING_TOOLS.has(name) || name === 'media_probe';
+  if (requiresConfirmation) {
     const serializedArgs = JSON.stringify(args, null, 2);
     if (serializedArgs.length > 5000) throw new Error('concat_approval_arguments_too_large_to_review');
     const choice = await dialog.showMessageBox(mainWindow, {
       type: 'warning',
       title: 'تأیید تغییر در Motion Studio',
-      message: 'این ابزار می‌تواند پروژه و فایل‌های ویدئویی را تغییر دهد.',
+      message: name === 'media_probe' ? 'این ابزار می‌تواند فایل رسانه‌ای مشخص‌شده را بخواند.' : 'این ابزار می‌تواند پروژه و فایل‌های ویدئویی را تغییر دهد.',
       detail: 'ابزار: ' + name + '\nورودی کامل:\n' + serializedArgs + '\nفقط در صورتی ادامه بده که این تغییر را تأیید می‌کنی.',
       buttons: ['لغو', 'اجرا'],
       defaultId: 0,
