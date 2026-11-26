@@ -125,10 +125,9 @@ Concat's current MCP documentation states that window mode routes through the op
 - The target Windows device is offline in Desktop Commander. Real-device checks cannot run yet.
 - The Concat 0.2.12 installation is confirmed by the user. An initial supervised MCP transport and UI panel are on the feature branch, but the real MCP handshake and end-to-end tests have not run.
 - No Windows isolation backend has been selected or verified. A read-only PowerShell preflight script now reports edition, virtualization, optional features, services, and firewall defaults.
-- GitHub Copilot review has been requested in PR #1. The issue comment did not trigger a review; the supported reviewer request still needs to be sent from the PR Reviewers control or API.
+- GitHub Copilot review was requested through the issue comment and reviewer API. GitHub did not show a requested Copilot reviewer or a review result. A Copilot review is not confirmed.
 - The project license remains `UNLICENSED`.
-- CI reported 8 npm vulnerabilities in the current dependency tree (6 moderate, 2 high). The exact advisory report is being added to CI output.
-- The current Electron dependency resolves to 35.7.5, which is end-of-life. A supported stable Electron upgrade is required before release.
+- Electron is upgraded to 45.5.0 and electron-builder to 26.18.1. The latest npm audit reports zero known vulnerabilities after a targeted minimatch 11.0.1 override. The Windows installer build for this exact tree is still pending.
 
 ## Release decision
 
