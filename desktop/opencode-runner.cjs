@@ -69,17 +69,18 @@ function runOpenCodePrompt(prompt, options = {}) {
     : ['run', ...(options.model ? ['--model', String(options.model)] : []), text];
 
   return new Promise((resolve, reject) => {
-    execFile(executable, args, {
+    const child = execFile(executable, args, {
       cwd,
       env,
       windowsHide: true,
       timeout: TIMEOUT_MS,
-      maxBuffer: 2 * 1024 * 1024
+      maxBuffer: 2 * 1024 * 1024,
+      ...(options.signal ? { signal: options.signal } : {})
     }, (error, stdout, stderr) => {
       const output = String(stdout || '').trim();
       const diagnostic = String(stderr || '').trim();
       if (error) {
-        const reason = error.killed ? 'opencode_timeout' : (error.code || 'opencode_failed');
+        const reason = options.signal?.aborted || error.code === 'ABORT_ERR' ? 'opencode_cancelled' : error.killed ? 'opencode_timeout' : (error.code || 'opencode_failed');
         reject(new Error(`${reason}${diagnostic ? `: ${diagnostic.slice(0, 500)}` : ''}`));
         return;
       }

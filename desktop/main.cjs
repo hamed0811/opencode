@@ -3,10 +3,12 @@ const path = require('node:path');
 const fs = require('node:fs');
 const { execFile } = require('node:child_process');
 const { runOpenCodePrompt, buildChildEnv } = require('./opencode-runner.cjs');
+const { createCouncilRuntime } = require('./council-runtime.cjs');
 
 let mainWindow;
 let tray;
 let workspaceRoot;
+let councilRuntime;
 
 const candidates = [
   { id: 'opencode', name: 'OpenCode', commands: ['opencode'] },
@@ -104,6 +106,31 @@ function createWindow() {
 app.whenReady().then(() => {
   workspaceRoot = path.resolve(process.env.COUNCIL_WORKSPACE || path.join(app.getPath('userData'), 'workspace'));
   fs.mkdirSync(workspaceRoot, { recursive: true });
+
+  councilRuntime = createCouncilRuntime({
+    dataRoot: path.join(app.getPath('userData'), 'council-runs'),
+    runAgent: (prompt, options = {}) => runOpenCodePrompt(prompt, { model: options.model, signal: options.signal, workspaceRoot }),
+    emit: event => mainWindow?.webContents.send('council:event', event)
+  });
+
+  ipcMain.handle('council:start', (event, payload = {}) => {
+    assertTrustedSender(event);
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('invalid_payload');
+    return councilRuntime.start(payload.prompt, { model: payload.model });
+  });
+  ipcMain.handle('council:cancel', (event, runId) => {
+    assertTrustedSender(event);
+    return councilRuntime.cancel(runId);
+  });
+  ipcMain.handle('council:history', event => {
+    assertTrustedSender(event);
+    return councilRuntime.history(20);
+  });
+  ipcMain.handle('council:approval', (event, payload = {}) => {
+    assertTrustedSender(event);
+    if (!payload || typeof payload !== 'object' || typeof payload.runId !== 'string') throw new Error('invalid_approval_payload');
+    return councilRuntime.recordApproval(payload.runId, payload.approved === true, payload.note || '');
+  });
 
   ipcMain.handle('companion:detect', async event => {
     assertTrustedSender(event);

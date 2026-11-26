@@ -69,26 +69,138 @@ function renderMessages() {
   timeline.innerHTML = filtered.length ? filtered.map(message => `<article class="timeline-item" data-id="${message.id}"><div class="timeline-avatar-wrap"><span class="timeline-avatar agent-avatar ${message.cls}">${message.initial}</span></div><div class="message-content"><div class="message-meta"><strong>${message.name}</strong><span class="role-tag">${message.role}</span><span class="message-time">${message.time}</span></div><p class="message-body">${message.body}</p><div class="message-tags">${message.tags.map(tag => `<span class="msg-tag ${tag.type}">${tag.text}</span>`).join('')}</div></div></article>`).join('') : '<div class="empty-state">برای این فیلتر هنوز پیامی ثبت نشده است.</div>';
 }
 function showToast(text) { toast.textContent = text; toast.classList.add('show'); window.clearTimeout(showToast.timer); showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 3000); }
-async function askOpenCode(prompt) {
-  if (!window.councilCompanion?.isDesktop || typeof window.councilCompanion.runOpenCodePrompt !== 'function') {
-    showToast('برای پاسخ واقعی OpenCode، نسخه دسکتاپ و OpenCode Companion را اجرا کنید.');
-    return;
-  }
-  showToast('در حال ارسال یک درخواست به OpenCode محلی؛ این اجرا هنوز چندایجنتی نیست…');
-  const response = await window.councilCompanion.runOpenCodePrompt(prompt);
-  if (!response?.ok) {
-    const errorText = response?.error || 'opencode_unavailable';
-    messages.unshift({ id: Date.now() + 1, agent: 'pm', name: 'پرشین', role: 'OpenCode محلی', initial: 'پ', cls: 'judge-avatar', time: 'نمونه', body: `وضعیت اتصال OpenCode: <span class="highlight">${escapeHtml(errorText)}</span>. OpenCode را نصب و در PATH قرار دهید، سپس دوباره تلاش کنید.`, tags: [{ text: 'اتصال ناموفق', type: 'critical' }] });
-    renderMessages();
-    showToast(`پاسخ OpenCode دریافت نشد: ${errorText}`);
-    return;
-  }
-  const answer = escapeHtml(response.result?.text || 'پاسخ خالی بود.').replace(/\r?\n/g, '<br>');
-  messages.unshift({ id: Date.now() + 1, agent: 'pm', name: 'پرشین', role: `پاسخ تکی OpenCode · ${escapeHtml(response.result?.model || 'catalog')}`, initial: 'پ', cls: 'judge-avatar', time: 'نمونه', body: answer, tags: [{ text: 'پاسخ تکی؛ نه جلسه چندایجنتی', type: 'reply' }] });
+function runtimeMessage(agentId, name, role, content, tagText = 'خروجی زنده', tagType = 'reply') {
+  const styles = { requirements: 'judge-avatar', architect: 'architect-avatar', backend: 'backend-avatar', security: 'security-avatar', qa: 'qa-avatar', devops: 'devops-avatar', critic: 'critic-avatar', judge: 'judge-avatar' };
+  messages.unshift({
+    id: Date.now() + Math.random(),
+    agent: agentId,
+    name,
+    role,
+    initial: String(name || '?').slice(0, 1),
+    cls: styles[agentId] || 'judge-avatar',
+    time: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }),
+    body: escapeHtml(content || '').replace(/\r?\n/g, '<br>'),
+    tags: [{ text: tagText, type: tagType }]
+  });
   messageTotal += 1;
   document.getElementById('messageCount').textContent = toPersianDigits(messageTotal);
   renderMessages();
-  showToast('پاسخ OpenCode در اتاق ثبت شد.');
+}
+
+let activeRunId = null;
+let approvalRunId = null;
+let lastJudgeApprovalRequired = false;
+
+function handleCouncilEvent(event) {
+  if (!event || !event.type) return;
+  const agent = agents.find(item => item.id === event.agentId);
+  if (event.type === 'run_started') {
+    activeRunId = event.runId;
+    document.querySelector('.live-indicator').textContent = 'جلسه زنده';
+    document.querySelector('.session-id strong').textContent = event.runId.slice(0, 8);
+    showToast('جلسه چندایجنتی شروع شد.');
+    return;
+  }
+  if (event.type === 'agent_started') {
+    if (agent) { agent.status = 'در حال اجرا'; agent.statusCls = 'active-status'; agent.active = true; renderAgents(); }
+    return;
+  }
+  if (event.type === 'agent_completed') {
+    if (agent) { agent.status = 'تکمیل شد'; agent.statusCls = 'done-status'; agent.active = false; renderAgents(); }
+    runtimeMessage(event.agentId, event.agentName, event.role, event.content, 'نظر مستقل', 'reply');
+    return;
+  }
+  if (event.type === 'agent_failed') {
+    if (agent) { agent.status = 'خطا'; agent.statusCls = ''; agent.active = false; renderAgents(); }
+    runtimeMessage(event.agentId, event.agentName, event.role, event.error || 'اجرای ایجنت ناموفق بود.', 'خطای اجرا', 'critical');
+    return;
+  }
+  if (event.type === 'critic_started') {
+    runtimeMessage('critic', 'منتقد مخالف', 'Cross-Critique', 'در حال مقایسه نظرها و جست‌وجوی تناقض‌ها…', 'نقد متقابل', 'critical');
+    return;
+  }
+  if (event.type === 'critic_completed') {
+    runtimeMessage('critic', event.agentName, event.role, event.content, 'نقد متقابل', 'critical');
+    return;
+  }
+  if (event.type === 'critic_failed') {
+    runtimeMessage('critic', 'منتقد مخالف', 'Cross-Critique', event.error || 'نقد متقابل ناموفق بود.', 'خطای نقد', 'critical');
+    return;
+  }
+  if (event.type === 'judge_started') {
+    runtimeMessage('judge', 'قاضی نهایی', 'Final Judge', 'در حال ارزیابی شواهد، اختلاف‌ها و ریسک‌ها…', 'قضاوت', '');
+    return;
+  }
+  if (event.type === 'judge_result') {
+    const judge = event.judge || {};
+    approvalRunId = event.approvalRequired ? event.runId : null;
+    lastJudgeApprovalRequired = Boolean(event.approvalRequired);
+    document.querySelector('.verdict-status').textContent = judge.decision || 'نامشخص';
+    document.querySelector('.decision-name').textContent = judge.selected_option || 'نیازمند بررسی بیشتر';
+    document.querySelector('.confidence strong').textContent = String(Math.round((judge.confidence || 0) * 100)) + '٪';
+    const summary = [
+      'تصمیم: ' + (judge.decision || 'نامشخص'),
+      'اطمینان: ' + Math.round((judge.confidence || 0) * 100) + '%',
+      'دلایل: ' + (Array.isArray(judge.reasons) ? judge.reasons.join('؛ ') : ''),
+      'گام بعد: ' + (judge.next_action || '—')
+    ].join('\n');
+    runtimeMessage('judge', 'قاضی نهایی', 'Final Judge', summary, 'حکم نهایی', event.approvalRequired ? 'critical' : 'reply');
+    const approve = document.getElementById('approveBtn');
+    approve.disabled = !event.approvalRequired;
+    approve.textContent = event.approvalRequired ? 'ثبت تصمیم انسانی' : 'نیاز به تأیید انسانی ثبت نشد';
+    return;
+  }
+  if (event.type === 'human_approval_recorded') {
+    runtimeMessage('pm', 'مالک پروژه', 'Human Approval', event.approved ? 'تصمیم انسانی ثبت شد؛ این ثبت به‌تنهایی هیچ کد یا عملیات Git را اجرا نمی‌کند.' : 'رد تصمیم انسانی ثبت شد.', 'ثبت تأیید', event.approved ? 'reply' : 'critical');
+    approvalRunId = null;
+    return;
+  }
+  if (event.type === 'run_completed') {
+    activeRunId = null;
+    showToast(event.status === 'HUMAN_APPROVAL_REQUIRED' ? 'جلسه تمام شد؛ تصمیم انسانی لازم است.' : 'جلسه تمام شد؛ حکم برای بررسی آماده است.');
+    return;
+  }
+  if (event.type === 'run_cancelled') {
+    activeRunId = null;
+    runtimeMessage('pm', 'پرشین', 'Orchestrator', 'اجرای جلسه لغو شد.', 'لغو شد', 'critical');
+    return;
+  }
+  if (event.type === 'run_failed') {
+    activeRunId = null;
+    runtimeMessage('pm', 'پرشین', 'Orchestrator', event.error || 'جلسه ناموفق بود.', 'خطای جلسه', 'critical');
+    showToast('اجرای جلسه با خطا متوقف شد.');
+  }
+}
+
+async function askOpenCode(prompt) {
+  if (!window.councilCompanion?.isDesktop || typeof window.councilCompanion.startCouncilRun !== 'function') {
+    showToast('برای اجرای شورای واقعی، نسخه دسکتاپ Council Room را باز کنید.');
+    return;
+  }
+  if (activeRunId) {
+    showToast('یک جلسه در حال اجرا است. ابتدا آن را لغو کنید.');
+    return;
+  }
+  try {
+    const result = await window.councilCompanion.startCouncilRun(prompt);
+    activeRunId = result.runId;
+    showToast('درخواست به ایجنت‌های مستقل ارسال شد.');
+  } catch (error) {
+    runtimeMessage('pm', 'پرشین', 'Orchestrator', error.message || 'شروع جلسه ناموفق بود.', 'خطای شروع', 'critical');
+  }
+}
+
+async function recordHumanApproval(approved) {
+  if (!approvalRunId || !window.councilCompanion?.recordCouncilApproval) {
+    showToast('در حال حاضر تأیید انسانی در انتظار ثبت نیست.');
+    return;
+  }
+  try {
+    await window.councilCompanion.recordCouncilApproval(approvalRunId, approved, 'تصمیم ثبت‌شده در رابط Council Room');
+    showToast('تصمیم انسانی ثبت شد. هیچ عملیات اجرایی یا Git انجام نشد.');
+  } catch (error) {
+    showToast('ثبت تصمیم انجام نشد: ' + (error.message || 'خطای نامشخص'));
+  }
 }
 function addMessage() {
   const value = messageInput.value.trim();
@@ -191,8 +303,8 @@ document.querySelectorAll('.view-toggle').forEach(button => button.addEventListe
 document.getElementById('sendBtn').addEventListener('click', addMessage);
 messageInput.addEventListener('keydown', event => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); addMessage(); } });
 messageInput.addEventListener('input', () => { messageInput.style.height = 'auto'; messageInput.style.height = `${Math.min(messageInput.scrollHeight, 100)}px`; });
-document.getElementById('pauseBtn').addEventListener('click', event => { isPaused = !isPaused; event.currentTarget.innerHTML = isPaused ? '<svg viewBox="0 0 24 24"><path d="m6 12 4 4L18 8"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>'; showToast(isPaused ? 'فقط شمارنده زمان متوقف شد؛ اجرای OpenCode لغو نمی‌شود.' : 'شمارنده زمان ادامه یافت.'); });
-document.getElementById('approveBtn').addEventListener('click', () => { showToast('این حکم نمونه است. هیچ Branch یا Pull Request ساخته نشد.'); });
+document.getElementById('pauseBtn').addEventListener('click', async () => { if (!activeRunId) { showToast('جلسه فعالی برای لغو وجود ندارد.'); return; } const result = await window.councilCompanion?.cancelCouncilRun?.(activeRunId); showToast(result?.ok ? 'درخواست لغو برای همه ایجنت‌ها ارسال شد.' : 'لغو جلسه ممکن نشد.'); });
+document.getElementById('approveBtn').addEventListener('click', () => recordHumanApproval(true));
 document.getElementById('approvalBtn').addEventListener('click', () => { showToast('این کارت نمونه است. هیچ تأییدی ثبت نشد.'); });
 document.querySelector('.decline-small').addEventListener('click', () => showToast('این کارت نمونه است. هیچ درخواستی رد یا تغییر داده نشد.'));
 document.getElementById('detailsBtn').addEventListener('click', () => showToast('این بخش فقط به سند نمونه اشاره می‌کند؛ حکم زنده‌ای برای نمایش وجود ندارد.'));
@@ -204,6 +316,7 @@ document.getElementById('saveGatewayBtn').addEventListener('click', saveGateway)
 document.getElementById('exportGatewayBtn').addEventListener('click', exportGateways);
 
 renderAgents(); renderMessages(); renderGateways(); loadProjectGateways();
+if (window.councilCompanion?.onCouncilEvent) window.councilCompanion.onCouncilEvent(handleCouncilEvent);
 document.getElementById('messageCount').textContent = toPersianDigits(messageTotal);
 let seconds = 0;
-setInterval(() => { if (!isPaused) { seconds += 1; const h = String(Math.floor(seconds / 3600)).padStart(2, '۰'); const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '۰'); const s = String(seconds % 60).padStart(2, '۰'); document.getElementById('elapsed').textContent = `${h}:${m}:${s}`; } }, 1000);
+setInterval(() => { seconds += 1; const h = String(Math.floor(seconds / 3600)).padStart(2, '۰'); const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '۰'); const s = String(seconds % 60).padStart(2, '۰'); document.getElementById('elapsed').textContent = `${h}:${m}:${s}`; }, 1000);
