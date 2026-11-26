@@ -170,7 +170,7 @@ app.whenReady().then(() => {
         type: 'warning',
         title: 'تأیید تغییر در Motion Studio',
         message: 'این ابزار می‌تواند پروژه و فایل‌های ویدئویی را تغییر دهد.',
-        detail: 'ابزار: ' + name + '\nفقط در صورتی ادامه بده که نام ابزار و ورودی آن را بررسی کرده‌ای.',
+        detail: 'ابزار: ' + name + '\nورودی:\n' + JSON.stringify(args, null, 2).slice(0, 5000) + '\nفقط در صورتی ادامه بده که این تغییر را تأیید می‌کنی.',
         buttons: ['لغو', 'اجرا'],
         defaultId: 0,
         cancelId: 0,
