@@ -162,6 +162,9 @@ app.whenReady().then(() => {
       concatClient.on('notification', message => {
         mainWindow?.webContents.send('concat:notification', { method: message.method, params: message.params || {} });
       });
+      concatClient.on('exit', details => {
+        mainWindow?.webContents.send('concat:exit', details);
+      });
     }
     try { return await concatClient.start(); }
     catch (error) {
