@@ -3,12 +3,21 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const MAX_PROMPT_LENGTH = 12000;
+const SAFE_ENV_KEYS = ['PATH','PATHEXT','COMSPEC','SYSTEMROOT','WINDIR','SYSTEMDRIVE','HOMEDRIVE','HOMEPATH','USERPROFILE','HOME','APPDATA','LOCALAPPDATA','PROGRAMDATA','PROGRAMFILES','PROGRAMFILES(X86)','PUBLIC','TEMP','TMP','OS','PROCESSOR_ARCHITECTURE','NUMBER_OF_PROCESSORS','LANG','LC_ALL','TERM','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_CACHE_HOME','OLLAMA_HOST'];
+
+function buildChildEnv(source = process.env) {
+  const safe = {};
+  for (const key of SAFE_ENV_KEYS) if (typeof source[key] === 'string') safe[key] = source[key];
+  return safe;
+}
 const TIMEOUT_MS = 10 * 60 * 1000;
 
 function resolveWorkspace(workspaceRoot, requestedCwd) {
   if (!workspaceRoot) throw new Error('workspace_root_required');
+  if (requestedCwd !== undefined && typeof requestedCwd !== 'string') throw new Error('invalid_workspace_path');
   const root = fs.realpathSync(path.resolve(workspaceRoot));
   const candidate = fs.realpathSync(path.resolve(root, requestedCwd || '.'));
+  if (!fs.statSync(candidate).isDirectory()) throw new Error('workspace_path_must_be_directory');
   const relative = path.relative(root, candidate);
   if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
     throw new Error('workspace_path_not_allowed');
@@ -48,14 +57,9 @@ function runOpenCodePrompt(prompt, options = {}) {
     return Promise.reject(error);
   }
 
-  const env = { ...process.env, COUNCIL_OPENCODE_CLI: command, COUNCIL_OPENCODE_PROMPT: text };
+  // Start from an explicit allowlist. Do not inherit arbitrary credentials.
+  const env = { ...buildChildEnv(process.env), COUNCIL_OPENCODE_CLI: command, COUNCIL_OPENCODE_PROMPT: text };
   if (options.model) env.COUNCIL_OPENCODE_MODEL = String(options.model);
-  else delete env.COUNCIL_OPENCODE_MODEL;
-
-  // Council Room does not forward optional cloud-provider secrets.
-  for (const key of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'OPENROUTER_API_KEY']) {
-    delete env[key];
-  }
 
   const windows = process.platform === 'win32';
   const executable = windows ? 'powershell.exe' : command;
@@ -89,4 +93,4 @@ function runOpenCodePrompt(prompt, options = {}) {
   });
 }
 
-module.exports = { runOpenCodePrompt, resolveWorkspace, findOpenCodeCommand, MAX_PROMPT_LENGTH };
+module.exports = { runOpenCodePrompt, resolveWorkspace, findOpenCodeCommand, buildChildEnv, SAFE_ENV_KEYS, MAX_PROMPT_LENGTH };
