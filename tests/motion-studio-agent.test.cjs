@@ -20,6 +20,25 @@ test('Motion Studio prompt lists only supplied tools and marks results as data',
   assert.doesNotMatch(prompt, /shell_exec/);
 });
 
+test('Motion Studio prompt keeps large tool catalogs within the runtime limit', () => {
+  const manyTools = Array.from({ length: 80 }, (_, index) => ({
+    name: 'tool_' + index,
+    access: index % 2 ? 'write' : 'read',
+    description: 'Tool description '.repeat(20),
+    inputSchema: {
+      type: 'object',
+      required: ['path'],
+      properties: Object.fromEntries(Array.from({ length: 20 }, (_, n) => ['field_' + n, {
+        type: 'string',
+        description: 'A long property description '.repeat(8)
+      }]))
+    }
+  }));
+  const prompt = buildMotionStudioPrompt('Review these tools', manyTools);
+  assert.ok(prompt.length <= 24000);
+  assert.match(prompt, /tool_79/);
+});
+
 test('Motion Studio parser accepts only known tools and object arguments', () => {
   const plan = parseMotionPlan('{"actions":[{"tool":"project_list","args":{}}],"message":"لیست پروژه‌ها"}', new Set(['project_list']));
   assert.equal(plan.actions[0].tool, 'project_list');
