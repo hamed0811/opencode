@@ -60,7 +60,8 @@ Workspace path validation is not a sandbox. Until the sandbox gate passes, agent
 - [x] Verify the Concat executable path and installed version through Windows.
 - [ ] Verify the initial supervised Concat MCP bridge through its documented interface on the real device.
 - [ ] Test project creation, media import, timeline edits, preview, save, export, cancellation, and crash recovery on real Concat.
-- [ ] Handle Concat unavailable, process crash, timeout, and user cancellation.
+- [x] Unit-test Concat process-exit propagation and MCP reconnect with a mock process.
+- [ ] Verify Concat unavailable, process crash, timeout, and user cancellation on the real Windows device.
 - [ ] Keep Concat paths and permissions configurable. Do not hardcode user-specific paths.
 
 ### 6. Windows release
