@@ -26,8 +26,8 @@ const defaultGatewayProfiles = [
   { id: 'omniroute', name: 'OmniRoute', type: 'openai-compatible', baseUrl: 'http://localhost:20128/v1', model: 'auto', apiKeyEnv: 'OMNIROUTE_API_KEY', enabled: false, keyConfigured: false, note: 'اختیاری؛ فقط پس از ثبت secret و فعال‌سازی کاربر', badge: 'Optional Local' }
 ];
 const gatewayPresets = {
-  openrouter: defaultGatewayProfiles[0],
-  omniroute: defaultGatewayProfiles[1],
+  openrouter: defaultGatewayProfiles.find(profile => profile.id === 'openrouter'),
+  omniroute: defaultGatewayProfiles.find(profile => profile.id === 'omniroute'),
   custom: { id: '', name: 'OpenAI-compatible سفارشی', type: 'openai-compatible', baseUrl: '', model: 'auto', apiKeyEnv: 'CUSTOM_PROVIDER_API_KEY', enabled: true, keyConfigured: false, note: 'اتصال سفارشی با قرارداد OpenAI', badge: 'Custom' }
 };
 
@@ -74,7 +74,7 @@ async function askOpenCode(prompt) {
     showToast('برای پاسخ واقعی OpenCode، نسخه دسکتاپ و OpenCode Companion را اجرا کنید.');
     return;
   }
-  showToast('پرشین در حال دریافت پاسخ از OpenCode محلی است…');
+  showToast('در حال ارسال یک درخواست به OpenCode محلی؛ این اجرا هنوز چندایجنتی نیست…');
   const response = await window.councilCompanion.runOpenCodePrompt(prompt);
   if (!response?.ok) {
     const errorText = response?.error || 'opencode_unavailable';
@@ -84,7 +84,7 @@ async function askOpenCode(prompt) {
     return;
   }
   const answer = escapeHtml(response.result?.text || 'پاسخ خالی بود.').replace(/\r?\n/g, '<br>');
-  messages.unshift({ id: Date.now() + 1, agent: 'pm', name: 'پرشین', role: `OpenCode محلی · ${escapeHtml(response.result?.model || 'catalog')}`, initial: 'پ', cls: 'judge-avatar', time: 'همین الان', body: answer, tags: [{ text: 'پاسخ واقعی OpenCode', type: '' }] });
+  messages.unshift({ id: Date.now() + 1, agent: 'pm', name: 'پرشین', role: `پاسخ تکی OpenCode · ${escapeHtml(response.result?.model || 'catalog')}`, initial: 'پ', cls: 'judge-avatar', time: 'همین الان', body: answer, tags: [{ text: 'پاسخ تکی؛ نه جلسه چندایجنتی', type: 'reply' }] });
   messageTotal += 1;
   document.getElementById('messageCount').textContent = toPersianDigits(messageTotal);
   renderMessages();
@@ -100,8 +100,8 @@ function addMessage() {
 function gatewayStatus(profile) {
   if (profile.type === 'local-cli') return { label: profile.enabled ? 'پیش‌فرض' : 'غیرفعال', cls: profile.enabled ? 'gateway-ready' : 'gateway-neutral' };
   if (!profile.baseUrl || !profile.model || !profile.apiKeyEnv) return { label: 'ناقص', cls: 'gateway-warning' };
-  if (!profile.keyConfigured) return { label: 'منتظر secret', cls: 'gateway-neutral' };
-  return { label: 'آماده', cls: 'gateway-ready' };
+  if (!profile.keyConfigured) return { label: 'اتصال تنظیم نشده', cls: 'gateway-neutral' };
+  return { label: 'اتصال تأیید نشده', cls: 'gateway-warning' };
 }
 function renderGatewayPresetOptions() {
   const select = document.getElementById('gatewayPreset');
@@ -153,16 +153,16 @@ function validateGatewayForm(showMessage = true) {
     if (showMessage) showToast('Base URL، مدل و نام secret را کامل و معتبر وارد کنید.');
     return false;
   }
-  if (showMessage) showToast(`تنظیمات معتبر است؛ مقدار ${apiKeyEnv} باید در runtime موجود باشد.`);
+  if (showMessage) showToast('ساختار تنظیمات معتبر است؛ اتصال واقعی Gateway هنوز پیاده‌سازی نشده است.');
   return true;
 }
 function saveGateway() {
   if (!validateGatewayForm(false)) { showToast('Base URL، مدل و نام secret را کامل و معتبر وارد کنید.'); return; }
   const previous = editingGatewayId ? gatewayProfiles.find(item => item.id === editingGatewayId) : null;
   const name = document.getElementById('gatewayName').value.trim() || 'درگاه سفارشی';
-  const profile = { id: editingGatewayId || `custom-${Date.now()}`, name, type: 'openai-compatible', baseUrl: document.getElementById('gatewayBaseUrl').value.trim(), model: document.getElementById('gatewayModel').value.trim(), apiKeyEnv: document.getElementById('gatewayKeyEnv').value.trim(), enabled: previous?.enabled ?? true, keyConfigured: Boolean(document.getElementById('gatewayKeyInput').value.trim()) || Boolean(previous?.keyConfigured), note: 'profile ساخته‌شده در Council Room', badge: previous?.badge || 'Custom' };
+  const profile = { id: editingGatewayId || `custom-${Date.now()}`, name, type: 'openai-compatible', baseUrl: document.getElementById('gatewayBaseUrl').value.trim(), model: document.getElementById('gatewayModel').value.trim(), apiKeyEnv: document.getElementById('gatewayKeyEnv').value.trim(), enabled: previous?.enabled ?? true, keyConfigured: false, note: 'تنظیمات ذخیره شده است؛ اتصال و ذخیره امن Secret هنوز پیاده‌سازی نشده است.', badge: previous?.badge || 'Custom' };
   if (editingGatewayId) gatewayProfiles = gatewayProfiles.map(item => item.id === editingGatewayId ? profile : item); else gatewayProfiles.push(profile);
-  persistGateways(); renderGateways(); closeGatewayForm(); showToast(`profile «${name}» ذخیره شد؛ secret در رابط ذخیره نشد.`);
+  persistGateways(); renderGateways(); closeGatewayForm(); showToast(`تنظیمات «${name}» ذخیره شد؛ Secret ذخیره نشد و اتصال فعال نیست.`);
 }
 function exportGateways() {
   const safeConfig = { version: 1, default: gatewayProfiles[0]?.id || null, profiles: gatewayProfiles.map(({ keyConfigured, ...profile }) => ({ ...profile, secret: `<env:${profile.apiKeyEnv}>` })) };
@@ -189,11 +189,11 @@ document.querySelectorAll('.view-toggle').forEach(button => button.addEventListe
 document.getElementById('sendBtn').addEventListener('click', addMessage);
 messageInput.addEventListener('keydown', event => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); addMessage(); } });
 messageInput.addEventListener('input', () => { messageInput.style.height = 'auto'; messageInput.style.height = `${Math.min(messageInput.scrollHeight, 100)}px`; });
-document.getElementById('pauseBtn').addEventListener('click', event => { isPaused = !isPaused; event.currentTarget.innerHTML = isPaused ? '<svg viewBox="0 0 24 24"><path d="m6 12 4 4L18 8"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>'; showToast(isPaused ? 'جلسه موقتاً متوقف شد.' : 'جلسه ادامه پیدا کرد.'); });
-document.getElementById('approveBtn').addEventListener('click', () => { showToast('حکم تأیید شد؛ branch و Pull Request نمونه ساخته می‌شود.'); document.getElementById('approveBtn').innerHTML = 'حکم تأیید شد <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>'; document.getElementById('approveBtn').style.background = '#3a8b7e'; });
-document.getElementById('approvalBtn').addEventListener('click', () => { showToast('تأیید شما ثبت شد و به قاضی اطلاع داده شد.'); document.getElementById('approvalBtn').textContent = 'تأیید شد'; document.getElementById('approvalBtn').disabled = true; });
-document.querySelector('.decline-small').addEventListener('click', () => showToast('این درخواست برای بررسی بعدی علامت‌گذاری شد.'));
-document.getElementById('detailsBtn').addEventListener('click', () => showToast('حکم کامل در فایل docs/opencode-council-scenario.md ثبت شده است.'));
+document.getElementById('pauseBtn').addEventListener('click', event => { isPaused = !isPaused; event.currentTarget.innerHTML = isPaused ? '<svg viewBox="0 0 24 24"><path d="m6 12 4 4L18 8"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>'; showToast(isPaused ? 'فقط شمارنده زمان متوقف شد؛ اجرای OpenCode لغو نمی‌شود.' : 'شمارنده زمان ادامه یافت.'); });
+document.getElementById('approveBtn').addEventListener('click', () => { showToast('تأیید واقعی و ساخت Branch یا Pull Request هنوز پیاده‌سازی نشده است.'); });
+document.getElementById('approvalBtn').addEventListener('click', () => { showToast('این دکمه هنوز به گردش‌کار تأیید واقعی متصل نیست. هیچ تغییری ثبت نشد.'); });
+document.querySelector('.decline-small').addEventListener('click', () => showToast('رد درخواست هنوز به گردش‌کار واقعی متصل نیست. هیچ تغییری ثبت نشد.'));
+document.getElementById('detailsBtn').addEventListener('click', () => showToast('این بخش فقط به سند نمونه اشاره می‌کند؛ حکم زنده‌ای برای نمایش وجود ندارد.'));
 document.getElementById('addGatewayBtn').addEventListener('click', () => openGatewayForm());
 document.getElementById('cancelGatewayBtn').addEventListener('click', closeGatewayForm);
 document.getElementById('gatewayPreset').addEventListener('change', event => { if (!editingGatewayId || event.target.value === 'custom') applyPreset(event.target.value); });
