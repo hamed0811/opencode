@@ -40,3 +40,16 @@ test('child process receives only allowlisted environment variables', () => {
 });
 
 test('prompt size limit is explicit', () => { assert.equal(MAX_PROMPT_LENGTH, 12000); });
+
+
+test('execution sandbox is explicitly disabled until OS isolation exists', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config', 'council.config.json'), 'utf8'));
+  assert.equal(config.execution.sandbox.enabled, false);
+  assert.equal(config.execution.sandbox.network, 'not_enforced');
+  assert.match(config.execution.sandbox.note, /OS-level isolation backend/i);
+});
+
+test('HTML does not contain escaped newline text from accidental source insertion', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.equal(html.includes('\\\\n'), false);
+});
