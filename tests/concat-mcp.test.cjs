@@ -71,7 +71,7 @@ test('Concat child environment excludes API keys and arbitrary secrets', () => {
     OPENAI_API_KEY: 'secret',
     GITHUB_TOKEN: 'secret',
     CUSTOM_SECRET: 'secret'
-  });
+  }, '', 'linux');
   assert.equal(env.PATH, 'C:\\Windows\\System32');
   assert.equal(env.OPENAI_API_KEY, undefined);
   assert.equal(env.GITHUB_TOKEN, undefined);
