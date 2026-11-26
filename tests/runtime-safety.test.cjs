@@ -47,11 +47,13 @@ test('runtime config is explicit and cannot inherit caller-supplied config', () 
     OPENCODE_DISABLE_PROJECT_CONFIG: '0'
   }, {
     configContent: { tools: { '*': false }, permission: { '*': 'deny' } },
-    disableProjectConfig: true
+    disableProjectConfig: true,
+    pure: true
   });
   assert.equal(env.OPENAI_API_KEY, undefined);
   assert.equal(env.OPENCODE_CONFIG_CONTENT, '{"tools":{"*":false},"permission":{"*":"deny"}}');
   assert.equal(env.OPENCODE_DISABLE_PROJECT_CONFIG, '1');
+  assert.equal(env.OPENCODE_PURE, '1');
   assert.throws(() => buildRuntimeEnv({}, { configContent: 'not-json' }), /invalid_opencode_config_content/);
 });
 
