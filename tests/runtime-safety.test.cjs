@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { resolveWorkspace, buildChildEnv, SAFE_ENV_KEYS, MAX_PROMPT_LENGTH } = require('../desktop/opencode-runner.cjs');
+const { resolveWorkspace, buildChildEnv, buildRuntimeEnv, SAFE_ENV_KEYS, MAX_PROMPT_LENGTH } = require('../desktop/opencode-runner.cjs');
 
 function tempDir(prefix) { return fs.mkdtempSync(path.join(os.tmpdir(), prefix)); }
 
@@ -39,7 +39,23 @@ test('child process receives only allowlisted environment variables', () => {
   assert.ok(Object.keys(result).every(key => SAFE_ENV_KEYS.includes(key)));
 });
 
-test('prompt size limit is explicit', () => { assert.equal(MAX_PROMPT_LENGTH, 12000); });
+test('runtime config is explicit and cannot inherit caller-supplied config', () => {
+  const env = buildRuntimeEnv({
+    PATH: 'C:\\Windows\\System32',
+    OPENAI_API_KEY: 'secret',
+    OPENCODE_CONFIG_CONTENT: '{"tools":{"*":true}}',
+    OPENCODE_DISABLE_PROJECT_CONFIG: '0'
+  }, {
+    configContent: { tools: { '*': false }, permission: { '*': 'deny' } },
+    disableProjectConfig: true
+  });
+  assert.equal(env.OPENAI_API_KEY, undefined);
+  assert.equal(env.OPENCODE_CONFIG_CONTENT, '{"tools":{"*":false},"permission":{"*":"deny"}}');
+  assert.equal(env.OPENCODE_DISABLE_PROJECT_CONFIG, '1');
+  assert.throws(() => buildRuntimeEnv({}, { configContent: 'not-json' }), /invalid_opencode_config_content/);
+});
+
+test('prompt size limit is explicit', () => { assert.equal(MAX_PROMPT_LENGTH, 24000); });
 
 
 test('execution sandbox is explicitly disabled until OS isolation exists', () => {
