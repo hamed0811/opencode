@@ -69,6 +69,8 @@ Workspace path validation is not a sandbox. Until the sandbox gate passes, agent
 - [ ] Add code signing or document the unsigned installer warning.
 - [ ] Publish SHA-256 checksums for release artifacts.
 - [ ] Verify logs do not contain secrets or private prompts.
+- [ ] Upgrade Electron 35.7.5. This release line is end-of-life; move to a currently supported stable line and test the migration.
+- [ ] Resolve high-severity dependency vulnerabilities and review all remaining npm audit findings.
 
 ### 7. Open-source release
 - [ ] Select a license and confirm it is compatible with all included assets and dependencies.
