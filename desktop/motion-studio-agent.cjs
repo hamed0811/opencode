@@ -102,7 +102,7 @@ function buildMotionStudioPrompt(userPrompt, tools, previousResults = []) {
         }
       };
     });
-    sections[10] = JSON.stringify(catalog);
+    sections[11] = JSON.stringify(catalog);
     resultsText = serializeBounded(previousResults, 2500);
     sections[sections.length - 1] = resultsText;
     prompt = sections.join('\n');
