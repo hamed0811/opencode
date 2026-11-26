@@ -102,6 +102,7 @@ test('Concat MCP performs initialize, lists approved tools, and calls read-only 
   assert.equal(result.content[0].text, '[]');
   await assert.rejects(client.callTool('timeline_read', {}), /concat_tool_unavailable/);
   await assert.rejects(client.callTool('shell_exec', {}), /concat_tool_not_allowed/);
+  await assert.rejects(client.callTool('project_list', { data: 'x'.repeat(65536) }), /concat_tool_arguments_too_large/);
   client.close();
 });
 
