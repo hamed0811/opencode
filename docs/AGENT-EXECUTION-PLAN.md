@@ -140,7 +140,7 @@ The Motion Studio assistant uses the installed OpenCode 1.x CLI as a text planne
 
 - It uses OpenCode's default in-process run server with a private app-data working directory, not the user's source workspace.
 - It uses a custom primary agent with all OpenCode tools denied.
-- It sets `OPENCODE_DISABLE_PROJECT_CONFIG=1` and supplies a restricted inline config.
+- It sets `OPENCODE_DISABLE_PROJECT_CONFIG=1`, enables OpenCode pure mode to skip external plugins, and supplies a restricted inline config.
 - The model returns a JSON plan. It cannot call Concat or run shell commands directly.
 - The Electron main process validates every action against the negotiated Concat allowlist.
 - The main process executes Concat MCP calls and shows a native confirmation for each mutating call.
