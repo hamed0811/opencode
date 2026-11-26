@@ -237,6 +237,7 @@ app.whenReady().then(() => {
         workspaceRoot: privateWorkspace,
         cwd: privateWorkspace,
         disableProjectConfig: true,
+        pure: true,
         configContent: safeRuntimeConfig
       }),
       executeTool: runConcatToolWithApproval
