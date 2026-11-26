@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('councilCompanion', {
   isDesktop: true,
   platform: process.platform,
   detectLocalTools: () => ipcRenderer.invoke('companion:detect'),
+  loadProjectConfig: () => ipcRenderer.invoke('companion:load-project-config'),
   runOpenCodePrompt: (prompt, options = {}) => ipcRenderer.invoke('opencode:run-prompt', {
     prompt,
     model: typeof options.model === 'string' ? options.model : undefined
