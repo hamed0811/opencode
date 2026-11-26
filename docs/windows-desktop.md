@@ -42,3 +42,8 @@ npm run desktop:installer
 - Agent-driven code changes remain disabled until a real OS-level sandbox and controlled tool policy are implemented.
 - Workspace validation is not a security sandbox. OpenCode still runs with the current Windows user's permissions.
 - Windows execution and installer behavior must be verified on a real Windows machine before release.
+
+
+## CI installer artifact
+
+The Windows CI job builds the unpacked application and the NSIS installer. It uploads the installer as the `Council-Room-Windows-Installer` workflow artifact for 14 days. The installer still requires a real target-machine smoke test before release.
