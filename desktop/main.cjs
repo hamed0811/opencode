@@ -236,7 +236,6 @@ app.whenReady().then(() => {
         agent: 'council-motion-studio',
         workspaceRoot: privateWorkspace,
         cwd: privateWorkspace,
-        standalone: true,
         disableProjectConfig: true,
         configContent: safeRuntimeConfig
       }),
