@@ -39,6 +39,7 @@ function buildRuntimeEnv(source = process.env, options = {}) {
     env.OPENCODE_CONFIG_CONTENT = content;
   }
   if (options.disableProjectConfig === true) env.OPENCODE_DISABLE_PROJECT_CONFIG = '1';
+  if (options.pure === true) env.OPENCODE_PURE = '1';
   return env;
 }
 
