@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, Menu, Tray, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { execFile } = require('node:child_process');
-const { runOpenCodePrompt } = require('./opencode-runner.cjs');
+const { runOpenCodePrompt, buildChildEnv } = require('./opencode-runner.cjs');
 
 let mainWindow;
 let tray;
