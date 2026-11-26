@@ -27,3 +27,6 @@ test('invalid transitions and duplicate execution are rejected', async () => {
   await runner.execute(id);
   await assert.rejects(() => runner.execute(id), /run_not_queued/);
 });
+
+
+test('planning failure records failed state', async () => {\n  const runner = new AgentRunner({ plan: async () => { throw new Error('planning_failed'); } });\n  const id = runner.createRun('broken plan');\n  await assert.rejects(() => runner.execute(id), /planning_failed/);\n  assert.equal(runner.getRun(id).state, 'failed');\n});\n
