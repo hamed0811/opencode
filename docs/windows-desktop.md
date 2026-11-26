@@ -29,6 +29,7 @@ npm run desktop:installer
 - OpenCode runs only in the configured workspace.
 - The child process receives an explicit environment allowlist. Arbitrary API keys and tokens from the parent process are not inherited.
 - The open-path IPC method only opens existing paths inside the configured workspace.
+- Workspace validation limits the process working directory. It is not an operating-system sandbox. OpenCode still runs with the current Windows user's permissions and may access other files through its own tools. Do not treat this as isolation from untrusted prompts or code.
 - Tool discovery checks executable names and version output. It does not prove that a tool can read files, run tests, or act as an agent.
 - Project configuration is read by the main process from the bundled config directory.
 
