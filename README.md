@@ -29,6 +29,7 @@ Council Room coordinates specialist agents, records their events, compares their
 - End-to-end tests against a real OpenCode installation are pending.
 - Installation and smoke tests on a real Windows device are pending.
 - The project license must be selected before the project can be presented as an open-source release.
+- The current Electron 35 dependency is end-of-life. Upgrade and security-audit work is required before release.
 
 Do not treat workspace path checks as a security boundary. OpenCode runs with the permissions of the Windows user who starts it.
 
