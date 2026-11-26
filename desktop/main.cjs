@@ -40,7 +40,11 @@ function runCommand(command, args, timeout = 2500) {
     const commandArgs = isWindowsScript
       ? ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', '$target=$env:COUNCIL_DETECT_COMMAND; $items=ConvertFrom-Json $env:COUNCIL_DETECT_ARGS; & $target @items; if ($LASTEXITCODE -ne $null) { exit $LASTEXITCODE }']
       : args;
-    const env = isWindowsScript ? { ...process.env, COUNCIL_DETECT_COMMAND: command, COUNCIL_DETECT_ARGS: JSON.stringify(args) } : process.env;
+    const env = buildChildEnv(process.env);
+    if (isWindowsScript) {
+      env.COUNCIL_DETECT_COMMAND = command;
+      env.COUNCIL_DETECT_ARGS = JSON.stringify(args);
+    }
     execFile(executable, commandArgs, { env, windowsHide: true, timeout }, (error, stdout, stderr) => {
       if (error) return resolve({ ok: false, error: error.code || 'not_found' });
       resolve({ ok: true, output: String(stdout || stderr || '').trim().split(/\r?\n/)[0].slice(0, 160) });
