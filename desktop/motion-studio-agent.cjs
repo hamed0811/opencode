@@ -103,7 +103,7 @@ function buildMotionStudioPrompt(userPrompt, tools, previousResults = []) {
         }
       };
     });
-    sections[11] = JSON.stringify(catalog);
+    sections[12] = JSON.stringify(catalog);
     resultsText = serializeBounded(previousResults, 2500);
     sections[sections.length - 1] = resultsText;
     prompt = sections.join('\n');
@@ -114,7 +114,7 @@ function buildMotionStudioPrompt(userPrompt, tools, previousResults = []) {
       access: tool.access,
       description: String(tool.description || '').slice(0, 40)
     }));
-    sections[11] = JSON.stringify(catalog);
+    sections[12] = JSON.stringify(catalog);
     sections[sections.length - 1] = serializeBounded(previousResults, 1000);
     prompt = sections.join('\n');
   }
