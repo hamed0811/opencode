@@ -29,4 +29,9 @@ test('invalid transitions and duplicate execution are rejected', async () => {
 });
 
 
-test('planning failure records failed state', async () => {\n  const runner = new AgentRunner({ plan: async () => { throw new Error('planning_failed'); } });\n  const id = runner.createRun('broken plan');\n  await assert.rejects(() => runner.execute(id), /planning_failed/);\n  assert.equal(runner.getRun(id).state, 'failed');\n});\n
+test('planning failure records failed state', async () => {
+  const runner = new AgentRunner({ plan: async () => { throw new Error('planning_failed'); } });
+  const id = runner.createRun('broken plan');
+  await assert.rejects(() => runner.execute(id), /planning_failed/);
+  assert.equal(runner.getRun(id).state, 'failed');
+});
