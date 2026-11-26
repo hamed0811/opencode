@@ -178,11 +178,13 @@ app.whenReady().then(() => {
     const name = String(payload.name || '');
     const args = payload.args === undefined ? {} : payload.args;
     if (MUTATING_TOOLS.has(name)) {
+      const serializedArgs = JSON.stringify(args, null, 2);
+      if (serializedArgs.length > 5000) throw new Error('concat_approval_arguments_too_large_to_review');
       const choice = await dialog.showMessageBox(mainWindow, {
         type: 'warning',
         title: 'تأیید تغییر در Motion Studio',
         message: 'این ابزار می‌تواند پروژه و فایل‌های ویدئویی را تغییر دهد.',
-        detail: 'ابزار: ' + name + '\nورودی:\n' + JSON.stringify(args, null, 2).slice(0, 5000) + '\nفقط در صورتی ادامه بده که این تغییر را تأیید می‌کنی.',
+        detail: 'ابزار: ' + name + '\nورودی کامل:\n' + serializedArgs + '\nفقط در صورتی ادامه بده که این تغییر را تأیید می‌کنی.',
         buttons: ['لغو', 'اجرا'],
         defaultId: 0,
         cancelId: 0,
