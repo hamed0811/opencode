@@ -1,0 +1,14 @@
+{
+  "app.title": "شورای ایجنت‌ها",
+  "connectors.title": "اتصال‌ها",
+  "connectors.status.disconnected": "قطع",
+  "connectors.status.connected": "متصل",
+  "connectors.status.needs_auth": "نیاز به احراز هویت",
+  "connectors.action.connect": "اتصال",
+  "connectors.action.disconnect": "قطع اتصال",
+  "connectors.action.test": "آزمایش اتصال",
+  "agents.title": "ایجنت‌ها",
+  "runs.title": "اجرای وظایف",
+  "approval.required": "نیاز به تأیید",
+  "errors.generic": "خطایی رخ داد"
+}
