@@ -1,13 +1,13 @@
 const agents = [
-  { id: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', status: 'نمونه', statusCls: '', active: false },
-  { id: 'architect', name: 'معمار نرم‌افزار', role: 'معماری runtime', initial: 'م', cls: 'architect-avatar', status: 'نمونه', statusCls: '', active: false },
-  { id: 'backend', name: 'متخصص بک‌اند', role: 'Tool API و اجرا', initial: 'ب', cls: 'backend-avatar', status: 'نمونه', statusCls: '' },
-  { id: 'frontend', name: 'متخصص فرانت‌اند', role: 'داشبورد و UX', initial: 'ف', cls: 'frontend-avatar', status: 'نمونه', statusCls: '' },
-  { id: 'db', name: 'متخصص دیتابیس', role: 'State و event log', initial: 'د', cls: 'db-avatar', status: 'نمونه', statusCls: '' },
-  { id: 'security', name: 'متخصص امنیت', role: 'Sandbox و Secretها', initial: 'ا', cls: 'security-avatar', status: 'نمونه', statusCls: '' },
-  { id: 'qa', name: 'متخصص تست', role: 'کیفیت و CI', initial: 'ت', cls: 'qa-avatar', status: 'نمونه', statusCls: '' },
-  { id: 'devops', name: 'متخصص DevOps', role: 'Branch و Pull Request', initial: 'د', cls: 'devops-avatar', status: 'نمونه', statusCls: '' },
-  { id: 'critic', name: 'منتقد مخالف', role: 'پیدا کردن ریسک‌ها', initial: 'ن', cls: 'critic-avatar', status: 'نمونه', statusCls: '' }
+  { id: 'pm', name: 'پرشین', role: 'هماهنگ‌کننده شورا', initial: 'پ', cls: 'judge-avatar', status: 'آماده', statusCls: '', active: false },
+  { id: 'requirements', name: 'تحلیل‌گر نیازمندی', role: 'معیار پذیرش و دامنه', initial: 'ن', cls: 'judge-avatar', status: 'آماده', statusCls: '' },
+  { id: 'architect', name: 'معمار نرم‌افزار', role: 'معماری و طراحی', initial: 'م', cls: 'architect-avatar', status: 'آماده', statusCls: '' },
+  { id: 'backend', name: 'متخصص بک‌اند', role: 'Runtime و API', initial: 'ب', cls: 'backend-avatar', status: 'آماده', statusCls: '' },
+  { id: 'security', name: 'متخصص امنیت', role: 'Threat model و مجوزها', initial: 'ا', cls: 'security-avatar', status: 'آماده', statusCls: '' },
+  { id: 'qa', name: 'متخصص تست', role: 'تست و کیفیت', initial: 'ت', cls: 'qa-avatar', status: 'آماده', statusCls: '' },
+  { id: 'devops', name: 'متخصص DevOps', role: 'CI و انتشار', initial: 'د', cls: 'devops-avatar', status: 'آماده', statusCls: '' },
+  { id: 'critic', name: 'منتقد مخالف', role: 'نقد متقابل', initial: 'ن', cls: 'critic-avatar', status: 'پس از مشورت', statusCls: '' },
+  { id: 'judge', name: 'قاضی نهایی', role: 'حکم مبتنی بر شواهد', initial: 'ق', cls: 'judge-avatar', status: 'پس از نقد', statusCls: '' }
 ];
 const messages = [
   { id: 1, agent: 'pm', name: 'پرشین', role: 'مغز متفکر · Orchestrator', initial: 'پ', cls: 'judge-avatar', time: 'نمونه', body: 'درخواست دریافت شد: برای مخزن <em>opencode</em> یک runtime بسازیم که وظایف برنامه‌نویسی را به ایجنت‌ها بسپارد، خروجی را در اتاق ثبت کند و در پایان Pull Request پیشنهاد دهد.', tags: [{ text: 'درخواست اصلی', type: '' }] },
@@ -89,7 +89,6 @@ function runtimeMessage(agentId, name, role, content, tagText = 'خروجی زن
 
 let activeRunId = null;
 let approvalRunId = null;
-let lastJudgeApprovalRequired = false;
 
 function handleCouncilEvent(event) {
   if (!event || !event.type) return;
@@ -134,7 +133,6 @@ function handleCouncilEvent(event) {
   if (event.type === 'judge_result') {
     const judge = event.judge || {};
     approvalRunId = event.approvalRequired ? event.runId : null;
-    lastJudgeApprovalRequired = Boolean(event.approvalRequired);
     document.querySelector('.verdict-status').textContent = judge.decision || 'نامشخص';
     document.querySelector('.decision-name').textContent = judge.selected_option || 'نیازمند بررسی بیشتر';
     document.querySelector('.confidence strong').textContent = String(Math.round((judge.confidence || 0) * 100)) + '٪';
