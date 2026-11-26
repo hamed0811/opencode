@@ -86,9 +86,36 @@ function buildMotionStudioPrompt(userPrompt, tools, previousResults = []) {
   ];
   let prompt = sections.join('\n');
   if (prompt.length > 22000) {
+    catalog = tools.map(tool => {
+      const schema = tool.inputSchema || {};
+      const properties = schema.properties && typeof schema.properties === 'object' ? schema.properties : {};
+      return {
+        name: tool.name,
+        access: tool.access,
+        description: String(tool.description || '').slice(0, 60),
+        inputSchema: {
+          type: schema.type || 'object',
+          required: Array.isArray(schema.required) ? schema.required.slice(0, 10) : [],
+          properties: Object.fromEntries(Object.entries(properties).slice(0, 8).map(([key, value]) => [
+            key, { type: value?.type || 'string' }
+          ]))
+        }
+      };
+    });
+    sections[10] = JSON.stringify(catalog);
     resultsText = serializeBounded(previousResults, 2500);
     sections[sections.length - 1] = resultsText;
-    prompt = sections.join('\\n');
+    prompt = sections.join('\n');
+  }
+  if (prompt.length > 22000) {
+    catalog = tools.map(tool => ({
+      name: tool.name,
+      access: tool.access,
+      description: String(tool.description || '').slice(0, 40)
+    }));
+    sections[10] = JSON.stringify(catalog);
+    sections[sections.length - 1] = serializeBounded(previousResults, 1000);
+    prompt = sections.join('\n');
   }
   if (prompt.length > 24000) throw new Error('motion_tool_catalog_too_large');
   return prompt;
