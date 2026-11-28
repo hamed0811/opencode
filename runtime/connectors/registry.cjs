@@ -49,14 +49,33 @@ function getConnector(id) {
   return registry.get(id);
 }
 
+function createApprovalAuthority() {
+  const issued = new WeakSet();
+  return Object.freeze({
+    issueApproval(id, operationId) {
+      const entry = registry.get(id);
+      if (!entry) throw new Error('connector_not_found');
+      const operation = entry.manifest.operations.find(item => item.id === operationId);
+      if (!operation) throw new Error('operation_not_found');
+      if (operation.risk === 'read') throw new Error('approval_not_required_for_read');
+      const token = Object.freeze({ connectorId: id, operationId });
+      issued.add(token);
+      return token;
+    },
+    isValid(token, id, operationId) {
+      return Boolean(token && issued.has(token) && token.connectorId === id && token.operationId === operationId);
+    }
+  });
+}
+
 async function execute(id, operationId, input, context = {}) {
   const entry = registry.get(id);
   if (!entry) throw new Error('connector_not_found');
   const operation = entry.manifest.operations.find(item => item.id === operationId);
   if (!operation) throw new Error('operation_not_found');
-  // Approval must be issued by a trusted host, not by model-generated context.
-  // This prototype check is not a production security boundary.
-  if (operation.risk !== 'read' && context.approved !== true) throw new Error('approval_required');
+  if (operation.risk !== 'read' && !context.approvalAuthority?.isValid(context.approval, id, operationId)) {
+    throw new Error('approval_required');
+  }
   const handler = entry.implementation.operations?.[operationId];
   if (typeof handler !== 'function') throw new Error('operation_not_implemented');
   return handler(input, context);
@@ -68,4 +87,4 @@ async function healthCheck(id) {
   return entry.implementation.healthCheck();
 }
 
-module.exports = { registerConnector, validateManifest, listConnectors, getConnector, execute, healthCheck };
+module.exports = { registerConnector, validateManifest, listConnectors, getConnector, execute, healthCheck, createApprovalAuthority };
