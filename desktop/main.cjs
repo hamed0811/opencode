@@ -91,6 +91,19 @@ app.whenReady().then(() => {
   });
   ipcMain.handle('provider:test', async (_event, payload = {}) => {
     try {
+      const parsed = new URL(String(payload.baseUrl || ''));
+      const allowedHosts = new Set(['api.openai.com', 'api.openrouter.ai', 'api.groq.com', 'api.z.ai', 'localhost', '127.0.0.1', '::1']);
+      const allowedKeys = new Map([
+        ['api.openai.com', 'OPENAI_API_KEY'],
+        ['api.openrouter.ai', 'OPENROUTER_API_KEY'],
+        ['api.groq.com', 'GROQ_API_KEY'],
+        ['api.z.ai', 'ZAI_API_KEY'],
+        ['localhost', 'OMNIROUTE_API_KEY'],
+        ['127.0.0.1', 'OMNIROUTE_API_KEY'],
+        ['::1', 'OMNIROUTE_API_KEY']
+      ]);
+      if (!allowedHosts.has(parsed.hostname)) throw new Error('provider_host_not_allowed');
+      if (payload.apiKeyEnv !== allowedKeys.get(parsed.hostname)) throw new Error('provider_secret_mapping_not_allowed');
       const provider = createOpenAICompatibleProvider({
         id: payload.id,
         baseUrl: payload.baseUrl,
