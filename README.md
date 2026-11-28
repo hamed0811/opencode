@@ -9,6 +9,7 @@ The desktop UI is still a prototype. Runtime foundation modules are implemented 
 ## Runtime foundation
 
 - Agent run lifecycle with planning, execution, review, cancellation and event traces.
+- Optional append-only JSONL event storage with basic secret-field redaction.
 - Bounded task pool with configurable concurrency (1–64).
 - Provider registry and OpenAI-compatible adapter.
 - Provider model discovery and chat completion using API keys from environment variables.
