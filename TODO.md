@@ -9,6 +9,8 @@
 - [x] Skill manifest registry and validation tests.
 - [x] Bounded task pool with concurrency limit and failure tests.
 - [x] Connector manifest validation and host-issued approval-token prototype.
+- [x] Confined workspace filesystem connector for directory listing, text reads and approved writes.
+- [x] Desktop provider health-check IPC with a host allowlist and fixed secret-name mapping.
 - [x] English and Persian locale bundles.
 - [x] Runtime test suite passes on Ubuntu and Windows with Node.js 22.
 
@@ -17,7 +19,7 @@
 - [ ] Replace mock agent statuses, approvals and buttons with real runtime state.
 - [ ] Add native Anthropic and Gemini adapters; verify real provider credentials supplied by the owner.
 - [ ] Add durable event/run storage and restart recovery.
-- [ ] Implement GitHub and confined workspace filesystem connectors.
+- [ ] Implement GitHub connector with read-only operations first.
 - [ ] Add OAuth lifecycle and Windows Credential Manager integration.
 - [ ] Move approval authority into a trusted host boundary and add audit records.
 - [ ] Add sandboxed shell/browser execution. Keep execution disabled until sandbox tests pass.
