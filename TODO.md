@@ -8,6 +8,7 @@
 - [x] Environment-only provider API key handling.
 - [x] Skill manifest registry and validation tests.
 - [x] Bounded task pool with concurrency limit and failure tests.
+- [x] Optional append-only JSONL event persistence with secret-field redaction.
 - [x] Connector manifest validation and host-issued approval-token prototype.
 - [x] Confined workspace filesystem connector for directory listing, text reads and approved writes.
 - [x] Desktop provider health-check IPC with a host allowlist and fixed secret-name mapping.
@@ -18,7 +19,7 @@
 - [ ] Integrate runtime, provider registry and skills into Electron IPC and UI.
 - [ ] Replace mock agent statuses, approvals and buttons with real runtime state.
 - [ ] Add native Anthropic and Gemini adapters; verify real provider credentials supplied by the owner.
-- [ ] Add durable event/run storage and restart recovery.
+- [ ] Add run-state snapshots and restart recovery. Event traces are persisted, but runs cannot yet resume after a restart.
 - [ ] Implement GitHub connector with read-only operations first.
 - [ ] Add OAuth lifecycle and Windows Credential Manager integration.
 - [ ] Move approval authority into a trusted host boundary and add audit records.
