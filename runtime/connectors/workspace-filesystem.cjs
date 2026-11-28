@@ -15,19 +15,20 @@ function createWorkspaceFilesystemConnector(options = {}) {
     return relative !== '' && relative !== '..' && !relative.startsWith('..' + path.sep) && !path.isAbsolute(relative);
   }
 
-  function resolveRelative(input) {
+  function resolveRelative(input, allowRoot = false) {
     if (typeof input !== 'string' || !input.trim() || input.includes('\0') || path.isAbsolute(input)) {
       throw new TypeError('invalid_workspace_path');
     }
     const target = path.resolve(root, input);
+    if (target === root && allowRoot) return target;
     if (!insideRoot(target)) throw new Error('workspace_path_outside_root');
     return target;
   }
 
   async function checkedExisting(input, kind) {
-    const target = resolveRelative(input);
+    const target = resolveRelative(input, kind === 'directory');
     const actual = await fs.promises.realpath(target);
-    if (!insideRoot(actual)) throw new Error('workspace_path_outside_root');
+    if (actual !== root && !insideRoot(actual)) throw new Error('workspace_path_outside_root');
     const stat = await fs.promises.stat(actual);
     if (kind === 'file' && !stat.isFile()) throw new Error('workspace_file_required');
     if (kind === 'directory' && !stat.isDirectory()) throw new Error('workspace_directory_required');
