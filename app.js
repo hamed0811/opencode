@@ -26,8 +26,8 @@ const defaultGatewayProfiles = [
   { id: 'omniroute', name: 'OmniRoute', type: 'openai-compatible', baseUrl: 'http://localhost:20128/v1', model: 'auto', apiKeyEnv: 'OMNIROUTE_API_KEY', enabled: false, keyConfigured: false, note: 'اختیاری؛ فقط پس از ثبت secret و فعال‌سازی کاربر', badge: 'Optional Local' }
 ];
 const gatewayPresets = {
-  openrouter: defaultGatewayProfiles[0],
-  omniroute: defaultGatewayProfiles[1],
+  openrouter: defaultGatewayProfiles[1],
+  omniroute: defaultGatewayProfiles[2],
   custom: { id: '', name: 'OpenAI-compatible سفارشی', type: 'openai-compatible', baseUrl: '', model: 'auto', apiKeyEnv: 'CUSTOM_PROVIDER_API_KEY', enabled: true, keyConfigured: false, note: 'اتصال سفارشی با قرارداد OpenAI', badge: 'Custom' }
 };
 
@@ -136,7 +136,7 @@ function openGatewayForm(id = null) {
   document.getElementById('gatewayBaseUrl').value = profile.baseUrl;
   document.getElementById('gatewayModel').value = profile.model;
   document.getElementById('gatewayKeyEnv').value = profile.apiKeyEnv;
-  document.getElementById('gatewayKeyInput').value = '';
+ 
   gatewayForm.hidden = false;
   gatewayForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
   document.getElementById('gatewayName').focus();
@@ -160,7 +160,7 @@ function saveGateway() {
   if (!validateGatewayForm(false)) { showToast('Base URL، مدل و نام secret را کامل و معتبر وارد کنید.'); return; }
   const previous = editingGatewayId ? gatewayProfiles.find(item => item.id === editingGatewayId) : null;
   const name = document.getElementById('gatewayName').value.trim() || 'درگاه سفارشی';
-  const profile = { id: editingGatewayId || `custom-${Date.now()}`, name, type: 'openai-compatible', baseUrl: document.getElementById('gatewayBaseUrl').value.trim(), model: document.getElementById('gatewayModel').value.trim(), apiKeyEnv: document.getElementById('gatewayKeyEnv').value.trim(), enabled: previous?.enabled ?? true, keyConfigured: Boolean(document.getElementById('gatewayKeyInput').value.trim()) || Boolean(previous?.keyConfigured), note: 'profile ساخته‌شده در Council Room', badge: previous?.badge || 'Custom' };
+  const profile = { id: editingGatewayId || `custom-${Date.now()}`, name, type: 'openai-compatible', baseUrl: document.getElementById('gatewayBaseUrl').value.trim(), model: document.getElementById('gatewayModel').value.trim(), apiKeyEnv: document.getElementById('gatewayKeyEnv').value.trim(), enabled: previous?.enabled ?? true, keyConfigured: Boolean(previous?.keyConfigured), note: 'profile ساخته‌شده در Council Room', badge: previous?.badge || 'Custom' };
   if (editingGatewayId) gatewayProfiles = gatewayProfiles.map(item => item.id === editingGatewayId ? profile : item); else gatewayProfiles.push(profile);
   persistGateways(); renderGateways(); closeGatewayForm(); showToast(`profile «${name}» ذخیره شد؛ secret در رابط ذخیره نشد.`);
 }
@@ -213,7 +213,17 @@ document.getElementById('checkGatewayBtn').addEventListener('click', async () =>
       model: document.getElementById('gatewayModel').value.trim(),
       apiKeyEnv: document.getElementById('gatewayKeyEnv').value.trim()
     });
-    showToast(result.ok ? `اتصال موفق؛ ${result.result.models} مدل شناسایی شد.` : `تست اتصال ناموفق: ${result.error}`);
+    if (result.ok) {
+      const currentId = editingGatewayId;
+      if (currentId) {
+        gatewayProfiles = gatewayProfiles.map(profile => profile.id === currentId ? { ...profile, keyConfigured: true, lastTestAt: new Date().toISOString() } : profile);
+        persistGateways();
+        renderGateways();
+      }
+      showToast(`اتصال موفق؛ ${result.result.models} مدل شناسایی شد.`);
+    } else {
+      showToast(`تست اتصال ناموفق: ${result.error}`);
+    }
   } catch (error) {
     showToast(`تست اتصال ناموفق: ${error.message || 'provider_test_failed'}`);
   } finally {
