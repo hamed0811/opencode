@@ -20,7 +20,7 @@ test('task pool respects concurrency and preserves input order', async () => {
 });
 
 test('task pool validates limits and stops scheduling after a failure', async () => {
-  assert.throws(() => runTasks([], { concurrency: 0 }), /invalid_concurrency/);
+  await assert.rejects(() => runTasks([], { concurrency: 0 }), /invalid_concurrency/);
   let started = 0;
   const tasks = [
     async () => { started += 1; throw new Error('task_failed'); },
