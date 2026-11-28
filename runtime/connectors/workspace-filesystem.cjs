@@ -18,8 +18,9 @@ function createWorkspaceFilesystemConnector(options = {}) {
   const rootKey = normalizePath(root);
   function sameRoot(target) { return normalizePath(target) === rootKey; }
   function insideRoot(target) {
-    const relative = path.relative(rootKey, normalizePath(target));
-    return relative !== '' && relative !== '..' && !relative.startsWith('..' + path.sep) && !path.isAbsolute(relative);
+    const candidate = normalizePath(target);
+    const prefix = rootKey.endsWith(path.sep) ? rootKey : rootKey + path.sep;
+    return candidate.startsWith(prefix);
   }
 
   function resolveRelative(input, allowRoot = false) {
