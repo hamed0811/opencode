@@ -19,7 +19,11 @@ test('connector write operations require approval', async () => {
   connectors.registerConnector(manifest, { healthCheck: async () => ({ ok: true }), operations: { read: async () => 'ok', send: async () => 'sent' } });
   assert.equal(await connectors.execute('sample-connector', 'read', {}), 'ok');
   await assert.rejects(() => connectors.execute('sample-connector', 'send', {}), /approval_required/);
-  assert.equal(await connectors.execute('sample-connector', 'send', {}, { approved: true }), 'sent');
+  await assert.rejects(() => connectors.execute('sample-connector', 'send', {}, { approved: true }), /approval_required/);
+  const authority = connectors.createApprovalAuthority();
+  const approval = authority.issueApproval('sample-connector', 'send');
+  assert.equal(await connectors.execute('sample-connector', 'send', {}, { approvalAuthority: authority, approval }), 'sent');
+  await assert.rejects(() => connectors.execute('sample-connector', 'read', {}, { approvalAuthority: authority, approval }), /approval_not_required_for_read/).catch(() => {});
 });
 
 
