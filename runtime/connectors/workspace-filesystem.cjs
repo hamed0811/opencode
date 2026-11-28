@@ -55,9 +55,11 @@ function createWorkspaceFilesystemConnector(options = {}) {
         const parent = await fs.promises.realpath(path.dirname(target));
         if (parent !== root && !insideRoot(parent)) throw new Error('workspace_path_outside_root');
         try {
+          const linkInfo = await fs.promises.lstat(target);
+          if (linkInfo.isSymbolicLink()) throw new Error('workspace_symlink_not_allowed');
+          if (!linkInfo.isFile()) throw new Error('workspace_file_required');
           const existing = await fs.promises.realpath(target);
           if (!insideRoot(existing)) throw new Error('workspace_path_outside_root');
-          if (!(await fs.promises.stat(existing)).isFile()) throw new Error('workspace_file_required');
         } catch (error) {
           if (error.code !== 'ENOENT') throw error;
         }
