@@ -130,6 +130,7 @@ function openGatewayForm(id = null) {
   editingGatewayId = id;
   const profile = id ? gatewayProfiles.find(item => item.id === id) : gatewayPresets.custom;
   if (!profile) return;
+  if (profile.type === 'local-cli') { showToast('OpenCode محلی از طریق Companion اجرا می‌شود و تنظیمات API ندارد.'); return; }
   document.getElementById('gatewayFormTitle').textContent = id ? `ویرایش ${profile.name}` : 'افزودن درگاه';
   document.getElementById('gatewayPreset').value = id && gatewayProfiles.some(profile => profile.id === id) ? id : 'custom';
   document.getElementById('gatewayName').value = profile.name;
@@ -160,7 +161,7 @@ function saveGateway() {
   if (!validateGatewayForm(false)) { showToast('Base URL، مدل و نام secret را کامل و معتبر وارد کنید.'); return; }
   const previous = editingGatewayId ? gatewayProfiles.find(item => item.id === editingGatewayId) : null;
   const name = document.getElementById('gatewayName').value.trim() || 'درگاه سفارشی';
-  const profile = { id: editingGatewayId || `custom-${Date.now()}`, name, type: 'openai-compatible', baseUrl: document.getElementById('gatewayBaseUrl').value.trim(), model: document.getElementById('gatewayModel').value.trim(), apiKeyEnv: document.getElementById('gatewayKeyEnv').value.trim(), enabled: previous?.enabled ?? true, keyConfigured: Boolean(previous?.keyConfigured), note: 'profile ساخته‌شده در Council Room', badge: previous?.badge || 'Custom' };
+  const profile = { id: editingGatewayId || `custom-${Date.now()}`, name, type: 'openai-compatible', baseUrl: document.getElementById('gatewayBaseUrl').value.trim(), model: document.getElementById('gatewayModel').value.trim(), apiKeyEnv: document.getElementById('gatewayKeyEnv').value.trim(), enabled: previous?.enabled ?? true, keyConfigured: Boolean(previous && previous.baseUrl === document.getElementById('gatewayBaseUrl').value.trim() && previous.model === document.getElementById('gatewayModel').value.trim() && previous.apiKeyEnv === document.getElementById('gatewayKeyEnv').value.trim() && previous.keyConfigured), note: 'profile ساخته‌شده در Council Room', badge: previous?.badge || 'Custom' };
   if (editingGatewayId) gatewayProfiles = gatewayProfiles.map(item => item.id === editingGatewayId ? profile : item); else gatewayProfiles.push(profile);
   persistGateways(); renderGateways(); closeGatewayForm(); showToast(`profile «${name}» ذخیره شد؛ secret در رابط ذخیره نشد.`);
 }
