@@ -23,7 +23,8 @@ test('connector write operations require approval', async () => {
   const authority = connectors.createApprovalAuthority();
   const approval = authority.issueApproval('sample-connector', 'send');
   assert.equal(await connectors.execute('sample-connector', 'send', {}, { approvalAuthority: authority, approval }), 'sent');
-  await assert.rejects(() => connectors.execute('sample-connector', 'read', {}, { approvalAuthority: authority, approval }), /approval_not_required_for_read/).catch(() => {});
+  assert.equal(authority.isValid(approval, 'sample-connector', 'send'), true);
+  assert.equal(authority.isValid(approval, 'sample-connector', 'delete'), false);
 });
 
 
