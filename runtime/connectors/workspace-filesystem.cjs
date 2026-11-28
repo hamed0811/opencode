@@ -24,7 +24,7 @@ function createWorkspaceFilesystemConnector(options = {}) {
   }
 
   function resolveRelative(input, allowRoot = false) {
-    if (typeof input !== 'string' || !input.trim() || input.includes('\0') || path.isAbsolute(input)) {
+    if (typeof input !== 'string' || !input.trim() || input.includes('\\0') || path.isAbsolute(input)) {
       throw new TypeError('invalid_workspace_path');
     }
     const target = path.resolve(root, input);
@@ -35,12 +35,22 @@ function createWorkspaceFilesystemConnector(options = {}) {
 
   async function checkedExisting(input, kind) {
     const target = resolveRelative(input, kind === 'directory');
-    const actual = await fs.promises.realpath(target);
-    if (!sameRoot(actual) && !insideRoot(actual)) throw new Error('workspace_path_outside_root');
-    const stat = await fs.promises.stat(actual);
+    const relative = path.relative(root, target);
+    let cursor = root;
+    let stat = await fs.promises.lstat(root);
+    if (relative) {
+      const parts = relative.split(path.sep).filter(Boolean);
+      for (let index = 0; index < parts.length; index += 1) {
+        cursor = path.join(cursor, parts[index]);
+        stat = await fs.promises.lstat(cursor);
+        if (stat.isSymbolicLink()) throw new Error('workspace_symlink_not_allowed');
+        if (index < parts.length - 1 && !stat.isDirectory()) throw new Error('workspace_directory_required');
+      }
+    }
+    if (stat.isSymbolicLink()) throw new Error('workspace_symlink_not_allowed');
     if (kind === 'file' && !stat.isFile()) throw new Error('workspace_file_required');
     if (kind === 'directory' && !stat.isDirectory()) throw new Error('workspace_directory_required');
-    return { target: actual, stat };
+    return { target, stat };
   }
 
   return {
@@ -60,14 +70,12 @@ function createWorkspaceFilesystemConnector(options = {}) {
         if (typeof input.content !== 'string') throw new TypeError('workspace_content_must_be_text');
         if (Buffer.byteLength(input.content, 'utf8') > maxFileBytes) throw new Error('workspace_file_too_large');
         const target = resolveRelative(input.path);
-        const parent = await fs.promises.realpath(path.dirname(target));
-        if (!sameRoot(parent) && !insideRoot(parent)) throw new Error('workspace_path_outside_root');
+        const parentRelative = path.relative(root, path.dirname(target)) || '.';
+        await checkedExisting(parentRelative, 'directory');
         try {
-          const linkInfo = await fs.promises.lstat(target);
-          if (linkInfo.isSymbolicLink()) throw new Error('workspace_symlink_not_allowed');
-          if (!linkInfo.isFile()) throw new Error('workspace_file_required');
-          const existing = await fs.promises.realpath(target);
-          if (!insideRoot(existing)) throw new Error('workspace_path_outside_root');
+          const info = await fs.promises.lstat(target);
+          if (info.isSymbolicLink()) throw new Error('workspace_symlink_not_allowed');
+          if (!info.isFile()) throw new Error('workspace_file_required');
         } catch (error) {
           if (error.code !== 'ENOENT') throw error;
         }
