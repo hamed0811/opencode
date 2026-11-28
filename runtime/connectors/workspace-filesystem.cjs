@@ -10,8 +10,15 @@ function createWorkspaceFilesystemConnector(options = {}) {
   const maxFileBytes = Number.isInteger(options.maxFileBytes) ? options.maxFileBytes : 1024 * 1024;
   if (maxFileBytes < 1 || maxFileBytes > 10 * 1024 * 1024) throw new RangeError('invalid_max_file_bytes');
 
+  function normalizePath(target) {
+    let value = path.resolve(target);
+    if (process.platform === 'win32') value = value.replace(/^\\\\\\?\\\\/, '').toLowerCase();
+    return value;
+  }
+  const rootKey = normalizePath(root);
+  function sameRoot(target) { return normalizePath(target) === rootKey; }
   function insideRoot(target) {
-    const relative = path.relative(root, target);
+    const relative = path.relative(rootKey, normalizePath(target));
     return relative !== '' && relative !== '..' && !relative.startsWith('..' + path.sep) && !path.isAbsolute(relative);
   }
 
@@ -20,7 +27,7 @@ function createWorkspaceFilesystemConnector(options = {}) {
       throw new TypeError('invalid_workspace_path');
     }
     const target = path.resolve(root, input);
-    if (target === root && allowRoot) return target;
+    if (sameRoot(target) && allowRoot) return target;
     if (!insideRoot(target)) throw new Error('workspace_path_outside_root');
     return target;
   }
@@ -28,7 +35,7 @@ function createWorkspaceFilesystemConnector(options = {}) {
   async function checkedExisting(input, kind) {
     const target = resolveRelative(input, kind === 'directory');
     const actual = await fs.promises.realpath(target);
-    if (actual !== root && !insideRoot(actual)) throw new Error('workspace_path_outside_root');
+    if (!sameRoot(actual) && !insideRoot(actual)) throw new Error('workspace_path_outside_root');
     const stat = await fs.promises.stat(actual);
     if (kind === 'file' && !stat.isFile()) throw new Error('workspace_file_required');
     if (kind === 'directory' && !stat.isDirectory()) throw new Error('workspace_directory_required');
@@ -53,7 +60,7 @@ function createWorkspaceFilesystemConnector(options = {}) {
         if (Buffer.byteLength(input.content, 'utf8') > maxFileBytes) throw new Error('workspace_file_too_large');
         const target = resolveRelative(input.path);
         const parent = await fs.promises.realpath(path.dirname(target));
-        if (parent !== root && !insideRoot(parent)) throw new Error('workspace_path_outside_root');
+        if (!sameRoot(parent) && !insideRoot(parent)) throw new Error('workspace_path_outside_root');
         try {
           const linkInfo = await fs.promises.lstat(target);
           if (linkInfo.isSymbolicLink()) throw new Error('workspace_symlink_not_allowed');
