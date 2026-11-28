@@ -14,6 +14,9 @@ function normalizeProvider(config) {
   if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password || parsed.search || parsed.hash) {
     throw new TypeError('invalid_provider_url');
   }
+  if (parsed.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname)) {
+    throw new TypeError('insecure_provider_url');
+  }
   if (!model) throw new TypeError('provider_model_required');
   if (!/^[A-Z][A-Z0-9_]{1,127}$/.test(apiKeyEnv)) throw new TypeError('invalid_api_key_env');
   return Object.freeze({ id, baseUrl, model, apiKeyEnv });
