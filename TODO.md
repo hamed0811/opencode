@@ -1,15 +1,30 @@
 # TODO — Council Room
 
-- [x] Create RTL command-center shell for the multi-agent council.
-- [x] Show agent roster with role, status, and activity indicators.
-- [x] Show live-style discussion timeline with filters and message metadata.
-- [x] Add disagreement threads and cross-critiques.
-- [x] Add final judge panel with decision, confidence, reasons, risks, and next action.
-- [x] Add human approval request block for sensitive actions.
-- [x] Add project-owner composer to send a new instruction into the room.
-- [x] Add responsive desktop/mobile layouts and accessible focus states.
-- [x] Add sample opencode consultation session from intake to Draft Pull Request.
-- [x] Add OpenAI-oriented Orchestrator configuration and system/role prompts.
-- [ ] Connect the server runtime to OpenAI using a protected secret.
-- [ ] Connect GitHub repository hamed0811/opencode after owner confirmation.
-- [ ] Create real branch, run tests, and open a Draft Pull Request from the server.
+## Completed
+- [x] Persian RTL desktop command-center prototype.
+- [x] Agent run lifecycle and event trace foundation.
+- [x] OpenAI-compatible provider adapter and provider registry.
+- [x] Provider model discovery and chat contract tests with a local fake HTTP server.
+- [x] Environment-only provider API key handling.
+- [x] Skill manifest registry and validation tests.
+- [x] Bounded task pool with concurrency limit and failure tests.
+- [x] Connector manifest validation and host-issued approval-token prototype.
+- [x] English and Persian locale bundles.
+- [x] Runtime test suite passes on Ubuntu and Windows with Node.js 22.
+
+## Remaining — required before production
+- [ ] Integrate runtime, provider registry and skills into Electron IPC and UI.
+- [ ] Replace mock agent statuses, approvals and buttons with real runtime state.
+- [ ] Add native Anthropic and Gemini adapters; verify real provider credentials supplied by the owner.
+- [ ] Add durable event/run storage and restart recovery.
+- [ ] Implement GitHub and confined workspace filesystem connectors.
+- [ ] Add OAuth lifecycle and Windows Credential Manager integration.
+- [ ] Move approval authority into a trusted host boundary and add audit records.
+- [ ] Add sandboxed shell/browser execution. Keep execution disabled until sandbox tests pass.
+- [ ] Add provider and connector timeout, retry, rate-limit and cancellation policies.
+- [ ] Add multi-agent integration, load, stress and failure-recovery tests.
+- [ ] Build and smoke-test the packaged Windows installer and portable app.
+- [ ] Review accessibility, localization coverage and security before release.
+
+## Release gate
+Do not call the application production-ready until every required item above has implementation evidence and passing tests. Do not merge to `main` without explicit owner approval.
