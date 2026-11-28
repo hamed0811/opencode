@@ -12,7 +12,7 @@ function createWorkspaceFilesystemConnector(options = {}) {
 
   function normalizePath(target) {
     let value = path.resolve(target);
-    if (process.platform === 'win32') value = value.replace(/^\\\\\\?\\\\/, '').toLowerCase();
+    if (process.platform === 'win32') value = value.replace(/^\\\\\?\\/, '').toLowerCase();
     return value;
   }
   const rootKey = normalizePath(root);
