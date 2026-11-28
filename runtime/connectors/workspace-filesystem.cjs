@@ -53,7 +53,7 @@ function createWorkspaceFilesystemConnector(options = {}) {
         if (Buffer.byteLength(input.content, 'utf8') > maxFileBytes) throw new Error('workspace_file_too_large');
         const target = resolveRelative(input.path);
         const parent = await fs.promises.realpath(path.dirname(target));
-        if (!insideRoot(parent)) throw new Error('workspace_path_outside_root');
+        if (parent !== root && !insideRoot(parent)) throw new Error('workspace_path_outside_root');
         try {
           const existing = await fs.promises.realpath(target);
           if (!insideRoot(existing)) throw new Error('workspace_path_outside_root');
