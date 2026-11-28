@@ -17,6 +17,8 @@ class AgentRunner extends EventEmitter {
     super();
     this.handlers = options.handlers || { plan: options.plan, execute: options.execute, review: options.review };
     this.runs = new Map();
+    this.eventStore = options.eventStore || null;
+    this.pendingEventWrites = Promise.resolve();
   }
   createRun(task, options = {}) {
     if (typeof task !== 'string' || !task.trim()) throw new TypeError('task_required');
@@ -50,10 +52,12 @@ class AgentRunner extends EventEmitter {
       this._checkCancel(run);
       if (review && review.approved === false) throw new Error('review_rejected');
       this._transition(run, 'completed');
+      await this.flushEvents();
       return { runId: id, result, review };
     } catch (error) {
       if (run.state === 'cancelled') return { runId: id, cancelled: true };
       if (transitions[run.state].includes('failed')) this._transition(run, 'failed', { reason: error.message });
+      await this.flushEvents();
       throw error;
     }
   }
@@ -63,10 +67,12 @@ class AgentRunner extends EventEmitter {
     run.state = next;
     this._event(run, 'state_changed', { state: next, ...extra });
   }
+  async flushEvents() { await this.pendingEventWrites; }
   _event(run, type, payload) {
     const event = { eventId: crypto.randomUUID(), runId: run.id, type, timestamp: Date.now(), payload };
     run.events.push(event);
     this.emit('event', event);
+    if (this.eventStore) this.pendingEventWrites = this.pendingEventWrites.then(() => this.eventStore.append(event));
   }
 }
 module.exports = { AgentRunner, transitions };
