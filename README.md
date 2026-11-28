@@ -26,13 +26,22 @@ Register an OpenAI-compatible provider in the runtime with:
 - `model`: configured model identifier.
 - `apiKeyEnv`: environment variable name that contains the API key.
 
-The runtime reads the secret from the environment at request time. It does not store the secret in provider metadata or return it in normal errors. OpenAI-compatible gateways such as OmniRoute and OpenRouter can use this adapter. Native Anthropic and Gemini adapters are not included yet.
+The runtime reads the secret from the environment at request time. It does not store the secret in provider metadata or return it in normal errors. The desktop test button supports the current allowlist: OpenAI, OpenRouter, Groq, Z.ai and local OmniRoute. Other custom hosts are rejected by the desktop IPC boundary.
+
+PowerShell example (set only the key you use, then launch from the same window):
+```powershell
+$env:OPENROUTER_API_KEY = "your-key"
+$env:OMNIROUTE_API_KEY = "your-key"
+npm run desktop
+```
+
+OpenAI-compatible gateways such as OmniRoute and OpenRouter can use this adapter. Native Anthropic and Gemini adapters are not included yet.
 
 ## Security and connector status
 
 The connector registry is a framework, not a set of live integrations. No Gmail, Telegram, GitHub, Discord or other external connector is enabled by default. A trusted desktop/server host must own the approval authority. Do not expose approval tokens to model-generated input.
 
-The current approval mechanism is an in-process prototype. It is not a substitute for OS-level isolation, a credential vault, or a hardened sandbox.
+The workspace filesystem connector confines paths to its configured root and rejects symlink components. It is not a substitute for OS-level isolation. The current approval mechanism is an in-process prototype. It is not a substitute for a Windows Credential Manager integration or a hardened sandbox.
 
 ## Tests
 
