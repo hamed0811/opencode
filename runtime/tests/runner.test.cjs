@@ -35,3 +35,19 @@ test('planning failure records failed state', async () => {
   await assert.rejects(() => runner.execute(id), /planning_failed/);
   assert.equal(runner.getRun(id).state, 'failed');
 });
+
+test('optional event store persists run lifecycle events', async t => {
+  const fs = require('node:fs/promises');
+  const os = require('node:os');
+  const path = require('node:path');
+  const { JsonlEventStore } = require('../event-store.cjs');
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'council-events-'));
+  t.after(() => fs.rm(dir, { recursive: true, force: true }));
+  const store = new JsonlEventStore(path.join(dir, 'runs', 'events.jsonl'));
+  const runner = new AgentRunner({ eventStore: store });
+  const id = runner.createRun('persist this run');
+  await runner.execute(id);
+  const events = await store.list({ runId: id });
+  assert.deepEqual(events.map(event => event.payload.state).filter(Boolean), ['planning', 'executing', 'reviewing', 'completed']);
+  assert.equal(events[0].type, 'run_created');
+});
