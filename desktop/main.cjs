@@ -117,10 +117,10 @@ app.whenReady().then(() => {
         'api.groq.com': ['/openai/v1'],
         'api.z.ai': ['/v1', '/api/paas/v4']
       };
-      if (allowedPaths[parsed.hostname] && !allowedPaths[parsed.hostname].includes(parsed.pathname.replace(/\\/+$/, ''))) {
+      if (allowedPaths[parsed.hostname] && !allowedPaths[parsed.hostname].includes(parsed.pathname.replace(/\/+$/, ''))) {
         throw new Error('provider_path_not_allowed');
       }
-      if (['localhost', '127.0.0.1'].includes(parsed.hostname) && parsed.pathname.replace(/\\/+$/, '') !== '/v1') {
+      if (['localhost', '127.0.0.1'].includes(parsed.hostname) && parsed.pathname.replace(/\/+$/, '') !== '/v1') {
         throw new Error('provider_local_path_not_allowed');
       }
       const provider = createOpenAICompatibleProvider({
