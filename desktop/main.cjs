@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, Menu, Tray, shell } = require('electron');
 const path = require('node:path');
 const { execFile } = require('node:child_process');
 const { runOpenCodePrompt } = require('./opencode-runner.cjs');
+const { createOpenAICompatibleProvider } = require('../runtime/providers/openai-compatible.cjs');
 
 let mainWindow;
 let tray;
@@ -86,6 +87,19 @@ app.whenReady().then(() => {
       return { ok: true, result: await runOpenCodePrompt(payload.prompt, { model: payload.model, cwd: payload.cwd }) };
     } catch (error) {
       return { ok: false, error: error.message || 'opencode_failed' };
+    }
+  });
+  ipcMain.handle('provider:test', async (_event, payload = {}) => {
+    try {
+      const provider = createOpenAICompatibleProvider({
+        id: payload.id,
+        baseUrl: payload.baseUrl,
+        model: payload.model,
+        apiKeyEnv: payload.apiKeyEnv
+      }, { env: process.env });
+      return { ok: true, result: await provider.healthCheck() };
+    } catch (error) {
+      return { ok: false, error: error.message || 'provider_test_failed' };
     }
   });
   ipcMain.handle('companion:open-path', (_event, target) => shell.openPath(target));
