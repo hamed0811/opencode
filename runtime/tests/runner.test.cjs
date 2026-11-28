@@ -47,7 +47,10 @@ test('optional event store persists run lifecycle events', async t => {
   const runner = new AgentRunner({ eventStore: store });
   const id = runner.createRun('persist this run');
   await runner.execute(id);
+  await store.append({ runId: id, type: 'secret_probe', payload: { apiKey: 'never-store-this' } });
   const events = await store.list({ runId: id });
   assert.deepEqual(events.map(event => event.payload.state).filter(Boolean), ['planning', 'executing', 'reviewing', 'completed']);
   assert.equal(events[0].type, 'run_created');
+  assert.equal(events.at(-1).payload.apiKey, '[REDACTED]');
+  assert.deepEqual(await store.list({ runId: id, limit: 0 }), []);
 });
