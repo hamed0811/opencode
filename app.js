@@ -197,7 +197,30 @@ document.getElementById('detailsBtn').addEventListener('click', () => showToast(
 document.getElementById('addGatewayBtn').addEventListener('click', () => openGatewayForm());
 document.getElementById('cancelGatewayBtn').addEventListener('click', closeGatewayForm);
 document.getElementById('gatewayPreset').addEventListener('change', event => { if (!editingGatewayId || event.target.value === 'custom') applyPreset(event.target.value); });
-document.getElementById('checkGatewayBtn').addEventListener('click', () => validateGatewayForm(true));
+document.getElementById('checkGatewayBtn').addEventListener('click', async () => {
+  if (!validateGatewayForm(false)) { showToast('Base URL، مدل و نام secret را کامل و معتبر وارد کنید.'); return; }
+  if (!window.councilCompanion?.isDesktop || typeof window.councilCompanion.testProvider !== 'function') {
+    showToast('تست اتصال واقعی فقط در نسخه دسکتاپ انجام می‌شود. کلید باید در متغیر محیطی ویندوز تنظیم شده باشد.');
+    return;
+  }
+  const button = document.getElementById('checkGatewayBtn');
+  button.disabled = true;
+  button.textContent = 'در حال تست…';
+  try {
+    const result = await window.councilCompanion.testProvider({
+      id: editingGatewayId || 'provider-test',
+      baseUrl: document.getElementById('gatewayBaseUrl').value.trim(),
+      model: document.getElementById('gatewayModel').value.trim(),
+      apiKeyEnv: document.getElementById('gatewayKeyEnv').value.trim()
+    });
+    showToast(result.ok ? `اتصال موفق؛ ${result.result.models} مدل شناسایی شد.` : `تست اتصال ناموفق: ${result.error}`);
+  } catch (error) {
+    showToast(`تست اتصال ناموفق: ${error.message || 'provider_test_failed'}`);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'تست اتصال';
+  }
+});
 document.getElementById('saveGatewayBtn').addEventListener('click', saveGateway);
 document.getElementById('exportGatewayBtn').addEventListener('click', exportGateways);
 
