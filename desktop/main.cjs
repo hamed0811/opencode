@@ -92,18 +92,37 @@ app.whenReady().then(() => {
   ipcMain.handle('provider:test', async (_event, payload = {}) => {
     try {
       const parsed = new URL(String(payload.baseUrl || ''));
-      const allowedHosts = new Set(['api.openai.com', 'api.openrouter.ai', 'api.groq.com', 'api.z.ai', 'localhost', '127.0.0.1', '::1']);
       const allowedKeys = new Map([
         ['api.openai.com', 'OPENAI_API_KEY'],
+        ['openrouter.ai', 'OPENROUTER_API_KEY'],
         ['api.openrouter.ai', 'OPENROUTER_API_KEY'],
         ['api.groq.com', 'GROQ_API_KEY'],
         ['api.z.ai', 'ZAI_API_KEY'],
         ['localhost', 'OMNIROUTE_API_KEY'],
-        ['127.0.0.1', 'OMNIROUTE_API_KEY'],
-        ['::1', 'OMNIROUTE_API_KEY']
+        ['127.0.0.1', 'OMNIROUTE_API_KEY']
       ]);
-      if (!allowedHosts.has(parsed.hostname)) throw new Error('provider_host_not_allowed');
-      if (payload.apiKeyEnv !== allowedKeys.get(parsed.hostname)) throw new Error('provider_secret_mapping_not_allowed');
+      const expectedKey = allowedKeys.get(parsed.hostname);
+      if (!expectedKey) throw new Error('provider_host_not_allowed');
+      if (payload.apiKeyEnv !== expectedKey) throw new Error('provider_secret_mapping_not_allowed');
+      if (parsed.protocol === 'http:' && (!['localhost', '127.0.0.1'].includes(parsed.hostname) || parsed.port !== '20128')) {
+        throw new Error('provider_local_endpoint_not_allowed');
+      }
+      if (parsed.protocol === 'https:' && parsed.port && parsed.port !== '443') {
+        throw new Error('provider_port_not_allowed');
+      }
+      const allowedPaths = {
+        'api.openai.com': ['/v1'],
+        'openrouter.ai': ['/api/v1'],
+        'api.openrouter.ai': ['/api/v1', '/v1'],
+        'api.groq.com': ['/openai/v1'],
+        'api.z.ai': ['/v1', '/api/paas/v4']
+      };
+      if (allowedPaths[parsed.hostname] && !allowedPaths[parsed.hostname].includes(parsed.pathname.replace(/\\/+$/, ''))) {
+        throw new Error('provider_path_not_allowed');
+      }
+      if (['localhost', '127.0.0.1'].includes(parsed.hostname) && parsed.pathname.replace(/\\/+$/, '') !== '/v1') {
+        throw new Error('provider_local_path_not_allowed');
+      }
       const provider = createOpenAICompatibleProvider({
         id: payload.id,
         baseUrl: payload.baseUrl,
