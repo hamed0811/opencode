@@ -12,8 +12,10 @@ The desktop UI is still a prototype. Runtime foundation modules are implemented 
 - Bounded task pool with configurable concurrency (1–64).
 - Provider registry and OpenAI-compatible adapter.
 - Provider model discovery and chat completion using API keys from environment variables.
+- Desktop provider health-check IPC with a host allowlist and fixed secret-name mapping.
 - Skill manifest registry. Skills provide instructions and capability declarations; they do not execute code.
 - Connector manifest registry with host-issued approval tokens for non-read operations.
+- Confined workspace filesystem connector for directory listing, text reads and approved writes.
 - English and Persian locale bundles with RTL metadata.
 
 ## Provider setup
@@ -43,10 +45,10 @@ GitHub Actions runs the runtime test suite on Ubuntu and Windows with Node.js 22
 
 ## Remaining work
 
-- Integrate provider and runtime modules into the Electron UI and IPC.
+- The desktop UI can test configured OpenAI-compatible provider endpoints. Runtime agent and skill controls still need UI integration.
 - Add native provider adapters and real user-configured provider smoke tests.
 - Implement durable run/event storage.
-- Add real connectors, beginning with GitHub and confined workspace filesystem access.
+- Add the GitHub connector. Workspace filesystem access is implemented with path confinement, but it is not an OS sandbox.
 - Add OAuth and secure OS credential storage.
 - Add sandboxed tool execution and audit logs.
 - Replace mock UI states and actions with real runtime events and approvals.
