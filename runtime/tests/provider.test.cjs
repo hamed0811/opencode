@@ -15,6 +15,7 @@ async function withServer(handler, run) {
 
 test('provider validates configuration and rejects credential-bearing URLs', () => {
   assert.throws(() => normalizeProvider({ id: 'bad', baseUrl: 'file:///tmp', model: 'x', apiKeyEnv: 'API_KEY' }), /invalid_provider_url/);
+  assert.throws(() => normalizeProvider({ id: 'bad', baseUrl: 'http://example.com/v1', model: 'x', apiKeyEnv: 'API_KEY' }), /insecure_provider_url/);
   assert.throws(() => normalizeProvider({ id: 'bad', baseUrl: 'https://user:pass@example.com/v1', model: 'x', apiKeyEnv: 'API_KEY' }), /invalid_provider_url/);
 });
 
