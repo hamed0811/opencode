@@ -32,6 +32,24 @@
         <section class="main-column">
           <section class="project-header panel"><div class="project-title-block"><div class="project-kicker"><span class="project-icon">⌘</span> پروژه: opencode <span class="separator">/</span> فاز صفر</div><h2>یک CLI امن برای برنامه‌نویسی با ایجنت‌ها بسازیم؟</h2><p>سناریوی نمونه: شناخت مخزن، طراحی runtime، اجرای تست‌ها و ساخت اولین Pull Request.</p></div><div class="project-meta"><div class="meta-item"><span>زمان سپری‌شده</span><strong id="elapsed">۰۰:۲۳:۱۷</strong></div><div class="meta-divider"></div><div class="meta-item"><span>پیام‌ها</span><strong id="messageCount">۳۱</strong></div><div class="meta-divider"></div><div class="meta-item"><span>مرحله</span><strong class="teal-text">مشورت</strong></div></div></section>
           <div class="progress-strip panel"><div class="progress-label"><span>پیشرفت سناریو</span><strong>۷۴٪</strong></div><div class="progress-track"><span style="width:74%"></span></div><div class="stage-steps"><span class="done"><i>✓</i> درخواست</span><span class="done"><i>✓</i> شناخت repo</span><span class="active"><i></i> مشورت</span><span><i></i> حکم نهایی</span><span><i></i> Pull Request</span></div></div>
+          <section class="gateway-panel panel">
+            <div class="gateway-panel-head">
+              <div><div class="eyebrow">اتصال مدل‌ها</div><h3>Providerها <span id="gatewayCount">۰</span></h3><p>کلیدها فقط از متغیر محیطی ویندوز خوانده می‌شوند.</p></div>
+              <div class="gateway-actions"><button id="exportGatewayBtn" class="gateway-secondary">خروجی تنظیمات</button><button id="addGatewayBtn" class="gateway-primary">افزودن Provider</button></div>
+            </div>
+            <div id="gatewayList" class="gateway-list"></div>
+            <form id="gatewayForm" class="gateway-form" hidden onsubmit="return false">
+              <div class="gateway-form-head"><strong id="gatewayFormTitle">افزودن Provider</strong><select id="gatewayPreset" aria-label="الگوی Provider"></select></div>
+              <div class="gateway-fields">
+                <label>نام نمایشی<input id="gatewayName" type="text" autocomplete="off"></label>
+                <label>Base URL<input id="gatewayBaseUrl" type="url" placeholder="https://api.example.com/v1" autocomplete="off"></label>
+                <label>مدل<input id="gatewayModel" type="text" placeholder="model-id" autocomplete="off"></label>
+                <label>نام متغیر Secret<input id="gatewayKeyEnv" type="text" placeholder="OPENROUTER_API_KEY" autocomplete="off"></label>
+              </div>
+              <p class="gateway-security-note">کلید API را در این فرم وارد نکنید. متغیر محیطی را در PowerShell تنظیم کنید و سپس برنامه را از همان پنجره اجرا کنید. نسخه دسکتاپ فقط اتصال Providerهای مجاز را آزمایش می‌کند.</p>
+              <div class="gateway-form-actions"><button type="button" id="checkGatewayBtn" class="gateway-secondary">تست اتصال</button><button type="button" id="saveGatewayBtn" class="gateway-primary">ذخیره تنظیمات</button><button type="button" id="cancelGatewayBtn" class="gateway-cancel">انصراف</button></div>
+            </form>
+          </section>
 
           <section class="discussion panel"><div class="section-header"><div><div class="section-title-line"><h3>جریان گفت‌وگو</h3><span class="unread-pill"><i></i> ۳ پیام جدید</span></div><p>سناریوی زنده ساخت opencode؛ هر پیام به یک تصمیم یا خروجی وصل است.</p></div><div class="discussion-tools"><div class="filter-select"><select id="agentFilter" aria-label="فیلتر بر اساس ایجنت"><option value="all">همه ایجنت‌ها</option><option value="architect">معمار</option><option value="security">امنیت</option><option value="backend">بک‌اند</option><option value="qa">تست</option><option value="critic">منتقد مخالف</option><option value="devops">DevOps</option></select><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></div><button class="view-toggle active" data-view="all">همه</button><button class="view-toggle" data-view="critical">مهم</button></div></div><div class="timeline" id="timeline"></div><div class="typing-row" id="typingRow"><span class="typing-avatar avatar judge-avatar">ق</span><span><strong>قاضی نهایی</strong> در حال جمع‌بندی نظرهاست</span><span class="typing-dots"><i></i><i></i><i></i></span></div><div class="composer"><div class="composer-avatar avatar owner-avatar">ح</div><div class="composer-input-wrap"><textarea id="messageInput" rows="1" placeholder="دستور یا سؤال جدیدی برای اتاق بنویسید…"></textarea><div class="composer-bottom"><span class="composer-hint"><kbd>@</kbd> برای خطاب به یک ایجنت &nbsp; <kbd>⌘</kbd><kbd>↵</kbd> ارسال</span><button class="send-button" id="sendBtn">ارسال به اتاق <svg viewBox="0 0 24 24"><path d="m5 12 14-7-3 14-4-5-7-2Zm7 2 3 2"/></svg></button></div></div></div></section>
         </section>
